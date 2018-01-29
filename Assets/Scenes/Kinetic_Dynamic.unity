@@ -880,6 +880,7 @@ GameObject:
   - component: {fileID: 1577973707}
   - component: {fileID: 1577973703}
   - component: {fileID: 1577973700}
+  - component: {fileID: 1577973708}
   m_Layer: 0
   m_Name: AI_Kinetic
   m_TagString: Untagged
@@ -1001,9 +1002,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MAXSPEED: 5
-  MAXANGULAR: 0
+  MAXANGULAR: 5
   MAXACCEL: 10
-  MAXROTATION: 0
+  MAXROTATION: 3
 --- !u!114 &1577973707
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1020,6 +1021,20 @@ MonoBehaviour:
   - {fileID: 702927394}
   - {fileID: 1673764987}
   - {fileID: 1328592503}
+--- !u!114 &1577973708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1577973698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb19d642820bc954a8e58089d112ecfd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  goalRadius: 0.1
+  slowRadius: 2.5
+  time_to_target: 0.1
 --- !u!1 &1581807316
 GameObject:
   m_ObjectHideFlags: 0

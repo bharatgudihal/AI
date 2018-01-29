@@ -13,12 +13,14 @@ public class KinematicBehavior : MonoBehaviour {
 
     private KinematicSteering seeking_output;
     private Vector3 new_velocity;
+    private DynoAlign dynoAlign;
 
     // Use this for initialization
     void Start () {
         char_kinematic = GetComponent<Kinematic>();
         seek = GetComponent<KinematicSeek>();
         arrive = GetComponent<KinematicArrive>();
+        dynoAlign = GetComponent<DynoAlign>();
     }
 	
 	// Update is called once per frame
@@ -33,9 +35,16 @@ public class KinematicBehavior : MonoBehaviour {
         char_kinematic.setVelocity(seeking_output.velc);
 
         // Manually set orientation for now
-        float new_orient = char_kinematic.getNewOrientation(seeking_output.velc);
-        char_kinematic.setOrientation(new_orient);
-        char_kinematic.setRotation(0f);
+        if (dynoAlign && dynoAlign.enabled)
+        {
+            ds = dynoAlign.getSteering();
+        }
+        else
+        {
+            float new_orient = char_kinematic.getNewOrientation(seeking_output.velc);
+            char_kinematic.setOrientation(new_orient);
+            char_kinematic.setRotation(0f);
+        }
 
         // Update Kinematic Steering
         kso = char_kinematic.updateSteering(ds, Time.deltaTime);
