@@ -57,4 +57,9 @@ public class DynoArrive : MonoBehaviour {
 
         return ds;
 	}
+
+    public bool HasArrived()
+    {
+        return (goalObject.getGoal().position - transform.position).magnitude / slowRadius < 0.5f;
+    }
 }

@@ -44,4 +44,9 @@ public class KinematicArrive : MonoBehaviour {
 
         return ks;
     }
+
+    public bool HasArrived()
+    {
+        return (goalObject.getGoal().position - transform.position).magnitude < radius_of_satisfaction;
+    }
 }

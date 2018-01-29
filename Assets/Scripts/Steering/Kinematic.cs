@@ -105,6 +105,6 @@ public class Kinematic : MonoBehaviour {
 
     public static float randomBinomial()
     {
-        return (float)(Random.Range(0f, 1f) - Random.Range(0f, 1f));
+        return Random.Range(0f, 1f) - Random.Range(0f, 1f);
     }
 }
