@@ -60,6 +60,6 @@ public class DynoArrive : MonoBehaviour {
 
     public bool HasArrived()
     {
-        return (goalObject.getGoal().position - transform.position).magnitude / slowRadius < 0.5f;
+        return (goalObject.getGoal().position - transform.position).magnitude < goalRadius;
     }
 }
