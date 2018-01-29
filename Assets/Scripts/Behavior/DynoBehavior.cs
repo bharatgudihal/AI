@@ -16,6 +16,10 @@ public class DynoBehavior : MonoBehaviour {
     private DynoSteering ds_force;
     private DynoSteering ds_torque;
 
+    [SerializeField]
+    private bool recordLogs;
+    private CustomLogWriter logWriter;
+
     // Use this for initialization
     void Start()
     {
@@ -23,6 +27,10 @@ public class DynoBehavior : MonoBehaviour {
         //seek = GetComponent<DynoSeek>();
         arrive = GetComponent<DynoArrive>();
         align = GetComponent<DynoAlign>();
+        if (recordLogs)
+        {
+            logWriter = GetComponent<CustomLogWriter>();
+        }
     }
 
     // Update is called once per frame
@@ -41,5 +49,10 @@ public class DynoBehavior : MonoBehaviour {
         //Debug.Log(kso.position);
         transform.position = new Vector3(kso.position.x, transform.position.y, kso.position.z);
         transform.rotation = Quaternion.Euler(0f, kso.orientation * Mathf.Rad2Deg, 0f);
+
+        if (recordLogs && logWriter && logWriter.enabled)
+        {
+            logWriter.Write(char_RigidBody.getVelocity().magnitude.ToString());
+        }
     }
 }

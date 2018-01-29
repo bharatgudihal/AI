@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class KinematicBehavior : MonoBehaviour {
@@ -15,16 +16,24 @@ public class KinematicBehavior : MonoBehaviour {
     private Vector3 new_velocity;
     private DynoAlign dynoAlign;
 
+    [SerializeField]
+    private bool recordLogs;
+    private CustomLogWriter logWriter;
+
     // Use this for initialization
     void Start () {
         char_kinematic = GetComponent<Kinematic>();
         seek = GetComponent<KinematicSeek>();
         arrive = GetComponent<KinematicArrive>();
         dynoAlign = GetComponent<DynoAlign>();
+        if (recordLogs)
+        {
+            logWriter = GetComponent<CustomLogWriter>();
+        }
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update () {
         ks = new KinematicSteering();
         ds = new DynoSteering();
 
@@ -51,6 +60,11 @@ public class KinematicBehavior : MonoBehaviour {
         
         transform.position = new Vector3(kso.position.x, transform.position.y, kso.position.z);
         transform.rotation = Quaternion.Euler(0f, kso.orientation * Mathf.Rad2Deg, 0f);
+
+        if (recordLogs && logWriter && logWriter.enabled)
+        {
+            logWriter.Write(char_kinematic.getVelocity().magnitude.ToString());
+        }
     }
 
     private void kinematicSeekBehavior()
@@ -71,4 +85,5 @@ public class KinematicBehavior : MonoBehaviour {
         transform.position = new Vector3(kso.position.x, transform.position.y, kso.position.z);
         transform.rotation = Quaternion.Euler(0f, kso.orientation * Mathf.Rad2Deg, 0f);
     }
+    
 }
