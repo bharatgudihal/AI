@@ -165,8 +165,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf8ec24b811fb34aae83ccae531a53a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goalRadius: 2
-  slowRadius: 10
+  goalRadius: 1
+  slowRadius: 5
   time_to_target: 0.25
 --- !u!114 &222848755
 MonoBehaviour:
@@ -245,7 +245,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MAXSPEED: 5
   MAXANGULAR: 5
-  MAXACCEL: 20
+  MAXACCEL: 10
   MAXROTATION: 3
 --- !u!23 &222848761
 MeshRenderer:
@@ -326,8 +326,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   crumbMaterial: {fileID: 2100000, guid: 8579bb32fdfc6ad48bdf4675936170ea, type: 2}
-  interval: 1
-  maxCrumbs: 10
+  interval: 0.2
+  maxCrumbs: 20
 --- !u!1 &228284429
 GameObject:
   m_ObjectHideFlags: 0
