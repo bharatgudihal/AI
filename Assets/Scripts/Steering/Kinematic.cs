@@ -16,7 +16,7 @@ public class Kinematic : MonoBehaviour {
     void Start () {
         sp = GetComponent<SteeringParams>();
 
-        position = this.transform.position;
+        
         velc = new Vector3(0f, 0f, 0f);
         rotation = 0f;
         orientation = 0f;
@@ -26,7 +26,7 @@ public class Kinematic : MonoBehaviour {
 	public KinematicSteeringOutput updateSteering(DynoSteering ds, float time) {
 
         steering = new KinematicSteeringOutput();
-
+        position = transform.position;
         // make Updates
         position += velc * time;
         orientation += rotation * time;
