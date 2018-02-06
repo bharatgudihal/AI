@@ -64,6 +64,8 @@ public class DynoAlign : MonoBehaviour {
 
         angularAcceleration = Mathf.Abs(ds.torque);
 
+        //GetComponent<CustomLogWriter>().Write(angularAcceleration.ToString());
+
         if (angularAcceleration > sp.MAXANGULAR)
         {
             ds.torque = ds.torque / angularAcceleration;
