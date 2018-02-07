@@ -6,7 +6,6 @@ using UnityEngine;
 public class KinematicBehavior : MonoBehaviour {
 
     private Kinematic char_kinematic;
-    private KinematicSteering ks;
     private DynoSteering ds;
     private KinematicSteeringOutput kso;
     private KinematicSeek seek;
@@ -33,8 +32,7 @@ public class KinematicBehavior : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
-        ks = new KinematicSteering();
+    void Update () {        
         ds = new DynoSteering();
 
         // Decide on behavior
