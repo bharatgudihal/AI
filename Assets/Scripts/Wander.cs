@@ -19,12 +19,20 @@ public class Wander : MonoBehaviour {
     Vector3 centerPoint;
 
     // Use this for initialization
-    void Start () {
+    private void Awake()
+    {
         goal = GetComponent<Goal>();
         orientation = 0.0f;
         goalObject = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         goalObject.transform.position = transform.position;
         goalObject.SetActive(showGoalObject);
+        if (goal)
+        {
+            goal.setGoal(goalObject);
+        }
+    }
+
+    void Start () {
         
     }
 	

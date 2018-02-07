@@ -60,6 +60,10 @@ public class BreadCrumbs : MonoBehaviour {
         GameObject newCrumb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         newCrumb.GetComponent<Renderer>().material = crumbMaterial;
         newCrumb.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+        if(newCrumb.GetComponent<Collider>() && newCrumb.GetComponent<Collider>().enabled)
+        {
+            newCrumb.GetComponent<Collider>().enabled = false;
+        }
         return newCrumb;
     }
 }

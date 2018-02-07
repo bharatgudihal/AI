@@ -9,7 +9,6 @@ public class DynoBehavior : MonoBehaviour {
     private DynoSteering ds;
 
     private KinematicSteeringOutput kso;
-    private DynoSeek seek;
     private DynoArrive arrive;
     private DynoAlign align;
 
@@ -24,7 +23,6 @@ public class DynoBehavior : MonoBehaviour {
     void Start()
     {
         char_RigidBody = GetComponent<Kinematic>();
-        //seek = GetComponent<DynoSeek>();
         arrive = GetComponent<DynoArrive>();
         align = GetComponent<DynoAlign>();
         if (recordLogs)
@@ -54,5 +52,5 @@ public class DynoBehavior : MonoBehaviour {
         {
             logWriter.Write(char_RigidBody.getVelocity().magnitude.ToString());
         }
-    }
+    }    
 }
