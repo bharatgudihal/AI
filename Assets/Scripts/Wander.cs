@@ -70,13 +70,13 @@ public class Wander : MonoBehaviour {
         transform.rotation = Quaternion.Euler(0f, rotation, 0f);
     }
 
-    private bool CheckForWall(out Vector3 wallPosition)
+    private bool CheckForWall(out GameObject wallPosition)
     {
-        wallPosition = Vector3.zero;
+        wallPosition = null;
         RaycastHit hit;
         if(Physics.Raycast(transform.position, transform.right, out hit, wallCheckDistance, LayerMask.GetMask("Wall")))
         {
-            wallPosition = hit.transform.position;
+            wallPosition = hit.transform.gameObject;
             //float incidenceAngle = char_RigidBody.getOrientation() * Mathf.Rad2Deg;
             //incidenceAngle = 180 - incidenceAngle;
             //char_RigidBody.setOrientation(incidenceAngle * Mathf.Deg2Rad);
@@ -89,17 +89,48 @@ public class Wander : MonoBehaviour {
 
     private void GetWanderGoal()
     {
-        Vector3 wallPosition;
-        float leftWeight = -1.0f;
-        float rightWeight = 1.0f;
-        if (CheckForWall(out wallPosition))
+        GameObject wall;
+        bool turnLeft = false;
+        bool turnRight = false;
+        if (CheckForWall(out wall))
         {
-            Vector3 wallDirection = (wallPosition - transform.position).normalized;
-            float weightOffset = Vector3.Dot(wallDirection, transform.right);
-            //Do something
+            Vector3 wallDirection = (transform.position - wall.transform.position).normalized;            
+            bool xDirection = Vector3.Dot(transform.right, wall.transform.right) > 0;
+            bool zDirection = Vector3.Dot(wallDirection, wall.transform.forward) > 0;
+            if (zDirection)
+            {
+                if(xDirection)
+                {
+                    turnLeft = true;
+                }
+                else
+                {
+                    turnRight = true;
+                }
+            }
+            else
+            {
+                if (xDirection)
+                {
+                    turnRight = true;
+                }
+                else
+                {
+                    turnLeft = true;
+                }
+            }
         }
-        centerPoint = transform.position + transform.right * wanderOffset;       
-        orientation += UnityEngine.Random.Range(leftWeight, rightWeight) * wanderRate * Time.deltaTime;
+        centerPoint = transform.position + transform.right * wanderOffset;
+        float offset = UnityEngine.Random.Range(-1.0f, 1.0f) * wanderRate * Time.deltaTime;
+        if (turnRight && offset > 0)
+        {
+            offset = 0.0f;
+        }else if(turnLeft && offset < 0)
+        {
+            offset = 0.0f;
+        }
+        orientation += offset;
+        //print(orientation);        
         Vector3 wanderTarget = transform.position;
         //x' = x + r * cos()
         wanderTarget.x = centerPoint.x + wanderRadius * Mathf.Cos(orientation);
