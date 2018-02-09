@@ -31,6 +31,7 @@ public class Wander : MonoBehaviour {
     private bool isWandering;
     private bool turnLeft = false;
     private bool turnRight = false;
+    private KinematicArrive kinematicArrive;
 
     // Use this for initialization
     private void Awake()
@@ -49,7 +50,8 @@ public class Wander : MonoBehaviour {
     void Start () {
         char_RigidBody = GetComponent<Kinematic>();
         arrive = GetComponent<DynoArrive>();
-        align = GetComponent<DynoAlign>();        
+        align = GetComponent<DynoAlign>();
+        kinematicArrive = GetComponent<KinematicArrive>();
         isWandering = true;
     }
 	
@@ -58,22 +60,27 @@ public class Wander : MonoBehaviour {
     {
         if (isWandering)
         {
-            CheckForWallAndTakeDecision();
+            //CheckForWallAndTakeDecision();
         }
 
         if (isWandering)
         {
             GetWanderGoal();
-        }
-        else if(arrive.HasArrived())
+            ds_force = arrive.getSteering();
+            ds = align.getSteering();
+            ds.force = ds_force.force;
+        }        
+        else
         {
-            isWandering = true;
-        }
+            KinematicSteering ks = kinematicArrive.getSteering();
 
-        ds_force = arrive.getSteering();
+            char_RigidBody.setVelocity(ks.velc);
 
-        ds = align.getSteering();
-        ds.force = ds_force.force;
+            //instantly set rotation
+            float new_orient = char_RigidBody.getNewOrientation(ds_force.force);
+            char_RigidBody.setOrientation(new_orient);
+            char_RigidBody.setRotation(0f);
+        }        
 
         // Update Kinematic Steering
         kso = char_RigidBody.updateSteering(ds, Time.deltaTime);
@@ -81,42 +88,25 @@ public class Wander : MonoBehaviour {
         transform.position = new Vector3(kso.position.x, transform.position.y, kso.position.z);
         float rotation = kso.orientation * Mathf.Rad2Deg;
         transform.rotation = Quaternion.Euler(0f, rotation, 0f);
-    }
 
-    private void CheckForWallAndTakeDecision()
+        if (!isWandering && (arrive.HasArrived() || kinematicArrive.HasArrived()))
+        {
+            isWandering = true;
+        }
+    }    
+
+    private void OnCollisionEnter(Collision collision)
     {
-        GameObject wall;
-        turnLeft = false;
-        turnRight = false;
-        if (CheckForWall(out wall))
+        if(collision.gameObject.layer == LayerMask.NameToLayer("Wall"))
         {
             if (UnityEngine.Random.Range(0, 2) == 0)
             {
-                Vector3 wallDirection = (transform.position - wall.transform.position).normalized;
-                bool xDirection = Vector3.Dot(transform.right, wall.transform.right) > 0;
-                bool zDirection = Vector3.Dot(wallDirection, wall.transform.forward) > 0;
-                if (zDirection)
-                {
-                    if (xDirection)
-                    {
-                        turnLeft = true;
-                    }
-                    else
-                    {
-                        turnRight = true;
-                    }
-                }
-                else
-                {
-                    if (xDirection)
-                    {
-                        turnRight = true;
-                    }
-                    else
-                    {
-                        turnLeft = true;
-                    }
-                }
+                float rotation = transform.rotation.eulerAngles.y;
+                rotation = 90 - rotation;
+                transform.rotation = Quaternion.Euler(0, rotation, 0);
+                goalObject.transform.position = transform.position + transform.forward * 5;
+                goal.setGoal(goalObject);
+                isWandering = false;
             }
             else
             {
@@ -139,11 +129,46 @@ public class Wander : MonoBehaviour {
         }
     }
 
+    private void CheckForWallAndTakeDecision()
+    {
+        GameObject wall;
+        turnLeft = false;
+        turnRight = false;
+        if (CheckForWall(out wall))
+        {
+            Vector3 wallDirection = (transform.position - wall.transform.position).normalized;
+            bool xDirection = Vector3.Dot(transform.right, wall.transform.right) > 0;
+            bool zDirection = Vector3.Dot(wallDirection, wall.transform.forward) > 0;
+            if (zDirection)
+            {
+                if (xDirection)
+                {
+                    turnLeft = true;
+                }
+                else
+                {
+                    turnRight = true;
+                }
+            }
+            else
+            {
+                if (xDirection)
+                {
+                    turnRight = true;
+                }
+                else
+                {
+                    turnLeft = true;
+                }
+            }            
+        }
+    }
+
     private bool CheckForWall(out GameObject wallPosition)
     {
         wallPosition = null;
         RaycastHit hit;
-        if(Physics.Raycast(transform.position, transform.right, out hit, wallCheckDistance, LayerMask.GetMask("Wall")))
+        if (Physics.Raycast(transform.position, transform.right, out hit, wallCheckDistance, LayerMask.GetMask("Wall")))
         {
             wallPosition = hit.transform.gameObject;
             return true;
