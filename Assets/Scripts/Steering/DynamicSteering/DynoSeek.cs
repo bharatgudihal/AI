@@ -9,6 +9,9 @@ public class DynoSeek : MonoBehaviour {
     private Transform goal;
     private DynoSteering steering;
 
+    [SerializeField]
+    private float goalRadius;
+
     // Use this for initialization
     void Start () {
         sp = GetComponent<SteeringParams>();
@@ -27,4 +30,13 @@ public class DynoSeek : MonoBehaviour {
 
         return steering;
 	}
+
+    public bool HasArrived()
+    {
+        Vector3 targetPosition = goalObject.getGoal().position;
+        targetPosition.y = 0;
+        Vector3 startPosition = transform.position;
+        startPosition.y = 0;
+        return (targetPosition - startPosition).magnitude < goalRadius;
+    }
 }

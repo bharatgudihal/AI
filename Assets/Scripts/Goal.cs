@@ -34,9 +34,15 @@ public class Goal :MonoBehaviour{
     {
         previousGoal = goalObject;
         orientation = 0f;
-        goal = goalObject.transform;
-        goalObject.GetComponent<Renderer>().material = goal_material;
-        //goalObject = (GameObject)goal.parent;
+        if (goalObject)
+        {
+            goal = goalObject.transform;
+            goalObject.GetComponent<Renderer>().material = goal_material;
+        }
+        else
+        {
+            goal = transform;
+        }        
     }
 
     void Update()
