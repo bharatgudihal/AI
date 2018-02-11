@@ -94,8 +94,8 @@ public class LevelManager : MonoBehaviour {
         float xPos = Mathf.RoundToInt(source.x / tileSize) * tileSize;
         float zPos = Mathf.RoundToInt(source.z / tileSize) * tileSize;
 
-        Vector3 quantizedPosition = new Vector3(xPos, 0, zPos);
-        return GetNode(quantizedPosition);
+        Vector3 localizedPosition = new Vector3(xPos, 0, zPos);
+        return GetNode(localizedPosition);
     }
 
     public List<Vector3> GetShortestPath(Vector3 start, Vector3 destination)

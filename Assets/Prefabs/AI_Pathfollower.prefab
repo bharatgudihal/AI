@@ -212,7 +212,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d319bdac0dd14864d80f2a010ef78ef7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goalRadius: 0.5
+  goalRadius: 1
 --- !u!114 &114486876082422872
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -249,7 +249,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf8ec24b811fb34aae83ccae531a53a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goalRadius: 1.5
+  goalRadius: 0.5
   slowRadius: 5
   time_to_target: 0.25
 --- !u!114 &114665032607515988
@@ -291,7 +291,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   crumbMaterial: {fileID: 2100000, guid: 8579bb32fdfc6ad48bdf4675936170ea, type: 2}
   interval: 0.2
-  maxCrumbs: 20
+  maxCrumbs: 50
 --- !u!135 &135737066007825536
 SphereCollider:
   m_ObjectHideFlags: 1
