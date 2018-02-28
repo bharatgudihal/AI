@@ -8,12 +8,11 @@ public class CustomLogWriter : MonoBehaviour {
     private StreamWriter writer;
     private bool isInitialized;
 
-    [SerializeField]
-    private string filePath = "Default.txt";
+    public string filePath = "Default.txt";
 
     private void OnEnable()
     {
-        InitializeFile();
+        
     }
 
     private void OnDisable()
@@ -23,13 +22,14 @@ public class CustomLogWriter : MonoBehaviour {
 
     private void InitializeFile()
     {
-        if (!File.Exists(filePath))
+        string fullFilePath = filePath + ".log";
+        if (!File.Exists(fullFilePath))
         {
-            writer = File.CreateText(filePath);
+            writer = File.CreateText(fullFilePath);
         }
         else
         {
-            writer = new StreamWriter(filePath);
+            writer = new StreamWriter(fullFilePath);
         }
         if (writer != null)
         {
