@@ -23,14 +23,11 @@ public class CustomLogWriter : MonoBehaviour {
     private void InitializeFile()
     {
         string fullFilePath = filePath + ".log";
-        if (!File.Exists(fullFilePath))
+        if (File.Exists(fullFilePath))
         {
-            writer = File.CreateText(fullFilePath);
+            File.Delete(fullFilePath);
         }
-        else
-        {
-            writer = new StreamWriter(fullFilePath);
-        }
+        writer = File.CreateText(fullFilePath);
         if (writer != null)
         {
             isInitialized = true;
