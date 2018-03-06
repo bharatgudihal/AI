@@ -26,7 +26,7 @@ public class RandomGraphGenerator : MonoBehaviour {
     }
 
     private List<Node> nodeList;
-    private List<List<int>> connectionMatrix;
+    private List<List<byte>> connectionMatrix;
     private CustomLogWriter nodeLogWriter;
     private CustomLogWriter aStarLogWriter;
     private CustomLogWriter dijkstraLogWriter;
@@ -56,10 +56,10 @@ public class RandomGraphGenerator : MonoBehaviour {
         }
 
         //Initialize connection matrix to all 0s
-        connectionMatrix = new List<List<int>>(numberOfNodes);
+        connectionMatrix = new List<List<byte>>(numberOfNodes);
         for (int i = 0; i < numberOfNodes; i++)
         {
-            connectionMatrix.Add(new List<int>(numberOfNodes));
+            connectionMatrix.Add(new List<byte>(numberOfNodes));
             for (int j = 0; j < numberOfNodes; j++)
             {
                 connectionMatrix[i].Add(0);
