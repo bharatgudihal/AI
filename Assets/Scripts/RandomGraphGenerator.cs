@@ -328,7 +328,7 @@ public class RandomGraphGenerator : MonoBehaviour {
     private List<Connection> GetConnections(Node node)
     {
         List<Connection> connections = new List<Connection>();
-        List<int> connectionsArray = connectionMatrix[node.id];
+        List<byte> connectionsArray = connectionMatrix[node.id];
         for (int i = 0; i < connectionsArray.Count; i++)
         {
             if (i != node.id && connectionsArray[i] == 1)
