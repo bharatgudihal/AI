@@ -28,14 +28,12 @@ public class SnakeLevel : MonoBehaviour {
     }    
 
     protected List<Node> nodeList;
-    protected List<List<byte>> connectionMatrix;
 
     public GameObject tilePrefab;
 
     // Use this for initialization
-    void Start () {        
+    void Awake () {        
         GenerateLevel();
-        CreateLevelGraph();
     }
 
     private void GenerateLevel()
@@ -52,30 +50,9 @@ public class SnakeLevel : MonoBehaviour {
                 tile.transform.position = position;
                 tile.transform.parent = transform;
                 Node node = new Node();
-                node.id = i;
+                node.id = i * 32 + j;
                 node.position = tile.transform.position;
                 nodeList.Add(node);
-            }
-        }
-    }
-
-    protected void CreateLevelGraph()
-    {   
-        connectionMatrix = new List<List<byte>>(nodeList.Count);
-        for (int i = 0; i < nodeList.Count; i++)
-        {
-            connectionMatrix.Add(new List<byte>(nodeList.Count));
-            for (int j = 0; j < nodeList.Count; j++)
-            {
-                //Self connection
-                if (i == j)
-                {
-                    connectionMatrix[i].Add(1);
-                }
-                else
-                {
-                    connectionMatrix[i].Add(CheckConnection(nodeList[i], nodeList[j]) ? (byte)1 : (byte)0);
-                }
             }
         }
     }
@@ -86,11 +63,11 @@ public class SnakeLevel : MonoBehaviour {
         return manhattanDistance == 1;
     }
 
-    public List<Vector3> GetShortestPath(Node start, Node destination)
+    public List<Vector3> GetShortestPath(Vector2 start, Vector2 destination)
     {
         List<Vector3> path = new List<Vector3>();
-        Node startNode = start;
-        Node destinationNode = destination;
+        Node startNode = GetNode(start);
+        Node destinationNode = GetNode(destination);
         //If they are valid nodes
         if (startNode.id != -1 && destinationNode.id != -1)
         {
@@ -197,20 +174,40 @@ public class SnakeLevel : MonoBehaviour {
         return result;
     }
 
-    private List<Connection> GetConnections(Node node)
+    private void AddConnectionIfPresent(ref Vector2 nodePosition, Node node, ref List<Connection> connections)
     {
-        List<Connection> connections = new List<Connection>();
-        List<byte> connectionsArray = connectionMatrix[node.id];
-        for (int i = 0; i < connectionsArray.Count; i++)
+        if (nodePosition.x < 16.0f && nodePosition.x >= -16.0f && nodePosition.y < 16.0f && nodePosition.y >= -16.0f)
         {
-            if (i != node.id && connectionsArray[i] == 1 && !nodeList[i].isBlocked)
+            if (!IsTileBlocked(nodePosition))
             {
                 Connection connection = new Connection();
                 connection.from = node;
-                connection.to = nodeList[i];
+                connection.to = GetNode(nodePosition);
                 connections.Add(connection);
             }
         }
+    }
+
+    private List<Connection> GetConnections(Node node)
+    {
+        List<Connection> connections = new List<Connection>();
+        
+        //Check up connection
+        Vector2 upNode = new Vector2(node.position.x, node.position.z + 1);
+        AddConnectionIfPresent(ref upNode, node, ref connections);
+
+        //Check down connection
+        Vector2 downNode = new Vector2(node.position.x, node.position.z - 1);
+        AddConnectionIfPresent(ref downNode, node, ref connections);
+
+        //Check left connection
+        Vector2 leftNode = new Vector2(node.position.x - 1, node.position.z);
+        AddConnectionIfPresent(ref leftNode, node, ref connections);
+
+        //Check right connection
+        Vector2 rightNode = new Vector2(node.position.x + 1, node.position.z);
+        AddConnectionIfPresent(ref rightNode, node, ref connections);
+
         return connections;
     }
 
@@ -241,10 +238,15 @@ public class SnakeLevel : MonoBehaviour {
         node.isBlocked = false;
     }
 
-    public Node GetNode(Vector2 position)
+    public bool IsTileBlocked(Vector2 position)
     {
-        position.x = (position.x + 16.0f) * 0.5f;
-        position.y = (position.y + 16.0f) * 0.5f;
+        return GetNode(position).isBlocked;
+    }
+
+    private Node GetNode(Vector2 position)
+    {
+        position.x = (position.x + 16.0f);
+        position.y = (position.y + 16.0f);
         int index = (int)position.x * 32 + (int)position.y;
         return nodeList[index];
     }
