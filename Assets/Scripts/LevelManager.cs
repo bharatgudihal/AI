@@ -7,20 +7,20 @@ public class LevelManager : MonoBehaviour {
 
     static private int tileSize = 2;
 
-    struct Node
+    protected struct Node
     {
         public int id;
         public Vector3 position;
     }
 
-    class Connection
+    protected class Connection
     {
         public Node from;
         public Node to;
         public float cost = tileSize;
     }
 
-    class NodeRecord
+    protected class NodeRecord
     {        
         public Node node;
         public Connection connection;
@@ -28,19 +28,19 @@ public class LevelManager : MonoBehaviour {
         public float totalEstimatedCost;
     }
 
-    private List<Node> nodeList;
-    private List<List<int>> connectionMatrix;    
+    protected List<Node> nodeList;
+    protected List<List<byte>> connectionMatrix;    
 
     // Use this for initialization
     void Start() {
         CreateLevelGraph();
     }
 
-    private void CreateLevelGraph()
+    protected void CreateLevelGraph()
     {
         GameObject[] tiles = GameObject.FindGameObjectsWithTag("Floor");
         nodeList = new List<Node>(tiles.Length);
-        connectionMatrix = new List<List<int>>(tiles.Length);
+        connectionMatrix = new List<List<byte>>(tiles.Length);
         for (int i = 0; i < tiles.Length; i++)
         {
             Node node = new Node();
@@ -51,7 +51,7 @@ public class LevelManager : MonoBehaviour {
 
         for (int i = 0; i < nodeList.Count; i++)
         {
-            connectionMatrix.Add(new List<int>(nodeList.Count));
+            connectionMatrix.Add(new List<byte>(nodeList.Count));
             for (int j = 0; j < nodeList.Count; j++)
             {
                 //Self connection
@@ -61,7 +61,7 @@ public class LevelManager : MonoBehaviour {
                 }
                 else
                 {
-                    connectionMatrix[i].Add(CheckConnection(nodeList[i], nodeList[j]) ? 1 : 0);
+                    connectionMatrix[i].Add(CheckConnection(nodeList[i], nodeList[j]) ? (byte)1 : (byte)0);
                 }
             }
         }
@@ -212,7 +212,7 @@ public class LevelManager : MonoBehaviour {
     private List<Connection> GetConnections(Node node)
     {
         List<Connection> connections = new List<Connection>();
-        List<int> connectionsArray = connectionMatrix[node.id];
+        List<byte> connectionsArray = connectionMatrix[node.id];
         for(int i = 0; i < connectionsArray.Count; i++)
         {
             if(i != node.id && connectionsArray[i] == 1)
