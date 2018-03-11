@@ -27,9 +27,12 @@ public class SnakeLevel : MonoBehaviour {
         public float totalEstimatedCost;
     }    
 
-    protected List<Node> nodeList;
+    private List<Node> nodeList;
+    private List<GameObject> tiles;
 
     public GameObject tilePrefab;
+    public Material normalMaterial;
+    public Material pathMaterial;
 
     // Use this for initialization
     void Awake () {        
@@ -39,6 +42,7 @@ public class SnakeLevel : MonoBehaviour {
     private void GenerateLevel()
     {
         nodeList = new List<Node>();
+        tiles = new List<GameObject>();
         for (int i = 0; i < 32; i++)
         {
             for(int j = 0; j < 32; j++)
@@ -53,6 +57,7 @@ public class SnakeLevel : MonoBehaviour {
                 node.id = i * 32 + j;
                 node.position = tile.transform.position;
                 nodeList.Add(node);
+                tiles.Add(tile);
             }
         }
     }
@@ -136,9 +141,28 @@ public class SnakeLevel : MonoBehaviour {
 
                 //Reverse path
                 path.Reverse();
+
+                HighlighPath(path);
             }
         }
         return path;
+    }
+
+    private void HighlighPath(List<Vector3> path)
+    {
+        for(int i = 0; i < tiles.Count; i++)
+        {
+            tiles[i].GetComponent<Renderer>().material = normalMaterial;
+        }
+
+        for(int i = 0; i < path.Count; i++)
+        {
+            float x = path[i].x + 16.0f;
+            float y = path[i].z + 16.0f;
+            int index = (int)x * 32 + (int)y;
+            GameObject tile = tiles[index];
+            tile.GetComponent<Renderer>().material = pathMaterial;
+        }
     }
 
     private NodeRecord GetRecordFromList(List<NodeRecord> closedList, Node node)
@@ -245,9 +269,9 @@ public class SnakeLevel : MonoBehaviour {
 
     private Node GetNode(Vector2 position)
     {
-        position.x = (position.x + 16.0f);
-        position.y = (position.y + 16.0f);
-        int index = (int)position.x * 32 + (int)position.y;
+        float x = position.x + 16.0f;
+        float y = position.y + 16.0f;
+        int index = (int)x * 32 + (int)y;
         return nodeList[index];
     }
 }
