@@ -200,7 +200,7 @@ public class SnakeLevel : MonoBehaviour {
 
     private void AddConnectionIfPresent(ref Vector2 nodePosition, Node node, ref List<Connection> connections)
     {
-        if (nodePosition.x < 16.0f && nodePosition.x >= -16.0f && nodePosition.y < 16.0f && nodePosition.y >= -16.0f)
+        if (IsValidNode(nodePosition))
         {
             if (!IsTileBlocked(nodePosition))
             {
@@ -262,9 +262,22 @@ public class SnakeLevel : MonoBehaviour {
         node.isBlocked = false;
     }
 
+    public void UnblockAll()
+    {
+        for(int i = 0; i < nodeList.Count; i++)
+        {
+            nodeList[i].isBlocked = false;
+        }
+    }
+
     public bool IsTileBlocked(Vector2 position)
     {
         return GetNode(position).isBlocked;
+    }
+
+    public bool IsValidNode(Vector2 position)
+    {
+        return position.x < 16.0f && position.x >= -16.0f && position.y < 16.0f && position.y >= -16.0f;
     }
 
     private Node GetNode(Vector2 position)

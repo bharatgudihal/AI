@@ -564,9 +564,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   snakeBodyPrefab: {fileID: 1503804581317734, guid: df7f309a35fcb8f4aa513bc051f66a38,
     type: 2}
-  waitTime: 0.03
-  pathFindEachFrame: 0
+  waitTime: 0
+  pathFindEachFrame: 1
   scoreText: {fileID: 465242332}
+  maxIterations: 10
+  useSpecialPathFinding: 1
 --- !u!4 &1840164845
 Transform:
   m_ObjectHideFlags: 0
