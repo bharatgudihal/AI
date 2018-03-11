@@ -289,7 +289,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1dc99c99e81206e44917ff54e1dbf4bf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfNodes: 7500
+  numberOfNodes: 16000
   minRandom: -100000
   maxRandom: 100000
   maxIterations: 50
