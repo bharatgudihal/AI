@@ -149,16 +149,14 @@ public class TicTacToe : MonoBehaviour {
 
         TicTacToeMCTSNode current = root;
         bool reset = false;
-        DateTime start = DateTime.UtcNow;
-        int maxTimeMilliseconds = 20;
         int totalIterations = 0;
         while (totalIterations < 10000)
-        //while(true)
         {
             totalIterations++;
             if (reset)
             {
                 current = root;
+                reset = false;
             }
 
             //Expand
@@ -202,12 +200,18 @@ public class TicTacToe : MonoBehaviour {
 
                 if (!simulationRun)
                 {
-                    current = current.children[selectedIndex];
+                    if(selectedIndex < current.children.Count)
+                    {
+                        current = current.children[selectedIndex];
+                    }
+                    else
+                    {
+                        //All nodes visited
+                        break;
+                    }                    
                 }
             }
         }
-
-        print("Total iterations " + totalIterations);
 
         //Make final selection
         float finalMaxUCB = 0.0f;
@@ -271,8 +275,8 @@ public class TicTacToe : MonoBehaviour {
         bool result = false;
         if (isDraw)
         {
-            //Flip coin to make a decision
-            result = UnityEngine.Random.Range(0, 2) == 0;            
+            //Draw is considered a win
+            result = true;
         }
         else
         {
