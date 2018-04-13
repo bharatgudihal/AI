@@ -6,8 +6,9 @@ using UnityEngine;
 public class TicTacToe : MonoBehaviour {
 
     private int[,] mainBoard = new int[3,3];
-    private bool turnToggle = false;
+    private int activePlayer = 0;
     private int turns = 0;
+    private bool stopGame = false;
 
     [SerializeField]
     private GameObject cross;
@@ -18,55 +19,90 @@ public class TicTacToe : MonoBehaviour {
     void Start () {
 		
 	}
-	
-	// Update is called once per frame
-	void Update () {
-        if (Input.GetMouseButtonDown(0))
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (!stopGame)
         {
-            RaycastHit hit;
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if(Physics.Raycast(ray, out hit))
+            if (activePlayer == 0)
             {
-                Vector3 position = hit.transform.position;
-                int i = (int)position.x + 1;
-                int j = (int)position.y + 1;
-                if(mainBoard[i,j] == 0)
+                if (Input.GetMouseButtonDown(0))
                 {
-                    if (!turnToggle)
+                    RaycastHit hit;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (Physics.Raycast(ray, out hit))
                     {
-                        //Circle's turn
-                        GameObject circleDup = Instantiate(circle);
-                        circleDup.transform.position = new Vector3(position.x, position.y, -1.0f);
-                        mainBoard[i, j] = 1;
-                    }
-                    else
-                    {
-                        //Cross' turn
-                        GameObject crossDup = Instantiate(cross);
-                        crossDup.transform.position = new Vector3(position.x, position.y, -1.0f);
-                        mainBoard[i, j] = 2;
-                    }
-
-                    turns++;
-
-                    if (CheckForWin(mainBoard))
-                    {
-                        //End game
-                        if (turnToggle) {
-                            print("Player 2 wins");
-                        }
-                        else
+                        Vector3 position = hit.transform.position;
+                        int i = (int)position.x + 1;
+                        int j = (int)position.y + 1;
+                        if (mainBoard[i, j] == 0)
                         {
-                            print("Player 1 wins");
+                            //Circle's turn
+                            GameObject circleDup = Instantiate(circle);
+                            circleDup.transform.position = new Vector3(position.x, position.y, -1.0f);
+                            mainBoard[i, j] = 1;
+
+                            turns++;
+
+                            if (CheckForWin(mainBoard))
+                            {
+                                print("Player 1 wins");
+                                stopGame = true;
+                            }
+                            else if (turns == 9)
+                            {
+                                print("Draw");
+                                stopGame = true;
+                            }
+                            activePlayer++;
+                            activePlayer %= 2;
                         }
                     }
-                    else if(turns == 9)
-                    {
-                        print("Draw");
-                    }
-                    turnToggle = !turnToggle;
-                    RunMCTS(2);
                 }
+            }
+            else
+            {
+                TicTacToeMCTSNode node = RunMCTS(activePlayer);
+                float x = node.x - 1;
+                if (x > 0)
+                {
+                    x += 0.05f;
+                }
+                else
+                {
+                    x -= 0.05f;
+                }
+
+                float y = node.y - 1;
+                if (y > 0)
+                {
+                    y += 0.05f;
+                }
+                else
+                {
+                    y -= 0.05f;
+                }
+
+                //Cross's turn
+                GameObject crossDup = Instantiate(cross);
+                crossDup.transform.position = new Vector3(x, y, -1.0f);
+                mainBoard[node.x, node.y] = 2;
+
+                turns++;
+
+                if (CheckForWin(mainBoard))
+                {
+                    print("Player 2 wins");
+                    stopGame = true;
+                }
+                else if (turns == 9)
+                {
+                    print("Draw");
+                    stopGame = true;
+                }
+                activePlayer++;
+                activePlayer %= 2;
             }
         }
 	}
@@ -75,12 +111,12 @@ public class TicTacToe : MonoBehaviour {
     {
         //Check diagonals        
         {
-            if(board[0,0] == board[1, 1] && board[1, 1] == board[2, 2] && board[2, 2] != 0)
+            if(board[2,0] == board[1, 1] && board[1, 1] == board[0, 2] && board[0, 2] != 0)
             {
                 return true;
             }
 
-            if (board[0, 2] == board[1, 1] && board[1, 1] == board[2, 0] && board[2, 2] != 0)
+            if (board[0, 0] == board[1, 1] && board[1, 1] == board[2, 2] && board[2, 2] != 0)
             {
                 return true;
             }
@@ -103,113 +139,23 @@ public class TicTacToe : MonoBehaviour {
         return false;
     }
 
-    class Node
-    {
-        public List<Node> children = new List<Node>();
-        public Node parent;
-        public float successfulPlayouts = 0;
-        public float totalPlayouts = 0;
-        public int player;
-
-        private int[,] boardState;
-
-        public int[,] BoardState
-        {
-            set
-            {
-                //copy board
-                boardState = new int[3, 3];
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        boardState[i, j] = value[i, j];
-                    }
-                }
-            }
-
-            get
-            {
-                int[,] duplicateBoardState = new int[3, 3];
-                for (int i = 0; i < 3; i++)
-                {
-                    for (int j = 0; j < 3; j++)
-                    {
-                        duplicateBoardState[i, j] = boardState[i, j];
-                    }
-                }
-                return duplicateBoardState;
-            }
-        }
-
-        public float UCB1()
-        {
-            float N = 0.0f;
-            if(parent != null)
-            {
-                N = parent.totalPlayouts;
-            }
-            return (successfulPlayouts / totalPlayouts) + Mathf.Sqrt(2.0f * Mathf.Log(N) / totalPlayouts);
-        }
-
-        public void Update(bool currentPlayer)
-        {
-            totalPlayouts++;
-            if(currentPlayer)
-            {
-                successfulPlayouts++;
-            }
-
-            if(parent != null)
-            {
-                parent.Update(!currentPlayer);
-            }
-        }
-
-        public void PopulateChildren()
-        {
-            for(int i = 0; i < 3; i++)
-            {
-                for(int j = 0; j < 3; j++)
-                {
-                    if(boardState[i,j] == 0)
-                    {
-                        //Change state
-                        boardState[i, j] = player;
-                        Node child = new Node();
-                        child.parent = this;
-                        child.BoardState = boardState;
-                        child.player = player + 1;
-                        if(child.player > 2)
-                        {
-                            child.player = 1;
-                        }
-                        children.Add(child);
-                        //Reset state
-                        boardState[i, j] = 0;
-                    }
-                }
-            }
-        }
-
-        public bool HasBeenVisited()
-        {
-            return totalPlayouts > 0;
-        }
-    }
-
     //Reference:https://www.youtube.com/watch?v=UXW2yZndl7U
-    private void RunMCTS(int player)
-    {        
-        Node root = new Node();
+    private TicTacToeMCTSNode RunMCTS(int player)
+    {
+        TicTacToeMCTSNode root = new TicTacToeMCTSNode();
         root.parent = null;
         root.BoardState = mainBoard;
         root.player = player;
 
-        Node current = root;
+        TicTacToeMCTSNode current = root;
         bool reset = false;
-        while (true)
+        DateTime start = DateTime.UtcNow;
+        int maxTimeMilliseconds = 20;
+        int totalIterations = 0;
+        while (totalIterations < 10000)
+        //while(true)
         {
+            totalIterations++;
             if (reset)
             {
                 current = root;
@@ -219,9 +165,6 @@ public class TicTacToe : MonoBehaviour {
             if (current.children.Count == 0)
             {
                 current.PopulateChildren();
-
-                //If end state stop algorithm
-                break;
             }
 
             //Select
@@ -236,7 +179,7 @@ public class TicTacToe : MonoBehaviour {
                         //Simulate
                         if (Simulate(current.children[i].BoardState, current.children[i].player))
                         {
-                            current.children[i].Update(true);                            
+                            current.children[i].Update(true);
                         }
                         else
                         {
@@ -248,7 +191,7 @@ public class TicTacToe : MonoBehaviour {
                     }
                     else
                     {
-                        float UCB = current.children[i].UCB1();
+                        float UCB = current.children[i].UCB1();                        
                         if (maxUCB < UCB)
                         {
                             maxUCB = UCB;
@@ -263,10 +206,81 @@ public class TicTacToe : MonoBehaviour {
                 }
             }
         }
+
+        print("Total iterations " + totalIterations);
+
+        //Make final selection
+        float finalMaxUCB = 0.0f;
+        int finalSelectedIndex = 0;
+        for (int i = 0; i < root.children.Count; i++)
+        {
+            float UCB = root.children[i].UCB1();
+            if (finalMaxUCB < UCB)
+            {
+                finalMaxUCB = UCB;
+                finalSelectedIndex = i;
+            }
+        }
+        TicTacToeMCTSNode selectedNode = root.children[finalSelectedIndex];
+        return selectedNode;
     }
 
     private bool Simulate(int[,] boardState, int player)
     {
-        return false;
+        List<int> availableXPosition = new List<int>();
+        List<int> availableYPosition = new List<int>();
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (boardState[i, j] == 0)
+                {
+                    availableXPosition.Add(i);
+                    availableYPosition.Add(j);
+                }
+            }
+        }
+
+        int currentPlayer = player;
+
+        bool isDraw = false;
+        while (CheckForWin(boardState))
+        {
+            //Check if its a draw
+            if(availableXPosition.Count == 0)
+            {
+                isDraw = true;
+                break;
+            }
+
+            //Make a random decision
+            int xIndex = UnityEngine.Random.Range(0, availableXPosition.Count);
+            int yIndex = UnityEngine.Random.Range(0, availableYPosition.Count);
+            int x = availableXPosition[xIndex];
+            int y = availableXPosition[yIndex];
+            
+            //Update board state
+            boardState[x, y] = currentPlayer + 1;
+            currentPlayer = (currentPlayer + 1) % 2;
+
+            //Update possibility space
+            availableXPosition.RemoveAt(xIndex);
+            availableYPosition.RemoveAt(yIndex);
+        }
+
+        bool result = false;
+        if (isDraw)
+        {
+            //Flip coin to make a decision
+            result = UnityEngine.Random.Range(0, 2) == 0;            
+        }
+        else
+        {
+            //Because we update the current player at the end of each turn,
+            //if current player is not equal to the player that originally started the simulation, the original player has won
+            result = currentPlayer != player;            
+        }
+
+        return result;
     }
 }
