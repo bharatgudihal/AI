@@ -139,7 +139,7 @@ Light:
   m_SpotAngle: 30
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -222,7 +222,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.014381502, g: 0.014507655, b: 0.014705896, a: 0}
+  m_BackGroundColor: {r: 0.41176468, g: 0.41176468, b: 0.41176468, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -233,7 +233,7 @@ Camera:
   far clip plane: 10
   field of view: 60
   orthographic: 1
-  orthographic size: 1.6
+  orthographic size: 5
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -256,59 +256,29 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 670787790}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -8.1}
+  m_LocalPosition: {x: 4, y: 4, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1598644829
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-      propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: b7c90da990881944a9ceb673bf21b958, type: 2}
-  m_IsPrefabParent: 0
---- !u!1 &1745896964 stripped
+--- !u!1 &1745896964
 GameObject:
+  m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 1011476814414896, guid: b7c90da990881944a9ceb673bf21b958,
     type: 2}
-  m_PrefabInternal: {fileID: 1598644829}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1745896966}
+  - component: {fileID: 1745896965}
+  m_Layer: 0
+  m_Name: Board
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!114 &1745896965
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -320,5 +290,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32141d3c106711b48b31655ef48c51fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  size: 5
   cross: {fileID: 1143203019439520, guid: 4cf82474e42704e44b17c435f3399d9b, type: 2}
   circle: {fileID: 1273664367009030, guid: c43d45914a617794fb82832692953162, type: 2}
+  whiteTile: {fileID: 1611015887583626, guid: 123c855bbcac13443b18a864b25117c5, type: 2}
+  blackTile: {fileID: 1976792972057660, guid: 7ee82069886182c408ec516a43b09fff, type: 2}
+--- !u!4 &1745896966
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 4908860714816086, guid: b7c90da990881944a9ceb673bf21b958,
+    type: 2}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1745896964}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
