@@ -9,7 +9,7 @@ public class TicTacToe : MonoBehaviour {
     private int activePlayer = 0;
     private int turns = 0;
     private bool stopGame = false;    
-    private int maxTurns;
+    private int maxTurns;    
 
     [SerializeField]
     private int size = 9;
@@ -22,6 +22,8 @@ public class TicTacToe : MonoBehaviour {
     private GameObject whiteTile;
     [SerializeField]
     private GameObject blackTile;
+    [SerializeField]
+    private bool AIvsAI;
 
     // Use this for initialization
     void Start () {
@@ -45,14 +47,18 @@ public class TicTacToe : MonoBehaviour {
                 tile.transform.position = new Vector3(i, j, 0.0f);
             }
         }
-	}
+
+        float cameraZ = Camera.main.transform.position.z;
+        Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
+
+    }
 
     // Update is called once per frame
     void Update()
     {
         if (!stopGame)
         {
-            if (activePlayer == 0)
+            if (activePlayer == 1 && !AIvsAI)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -65,16 +71,14 @@ public class TicTacToe : MonoBehaviour {
                         int j = (int)position.y;
                         if (mainBoard[i, j] == 0)
                         {
-                            //Circle's turn
-                            GameObject circleDup = Instantiate(circle);
-                            circleDup.transform.position = new Vector3(position.x, position.y, -1.0f);
-                            mainBoard[i, j] = 1;
-
+                            GameObject crossDup = Instantiate(cross);
+                            crossDup.transform.position = new Vector3(position.x, position.y, -1.0f);
+                            mainBoard[i, j] = activePlayer + 1;
                             turns++;
 
                             if (CheckForWin(mainBoard))
                             {
-                                print("Player 1 wins");
+                                print("Player 2 wins");
                                 stopGame = true;
                             }
                             else if (turns == maxTurns)
@@ -90,18 +94,34 @@ public class TicTacToe : MonoBehaviour {
             }
             else
             {
+                //RunMCTS(activePlayer);
                 TicTacToeMCTSNode node = RunMCTS(activePlayer);
-                
-                //Cross's turn
-                GameObject crossDup = Instantiate(cross);
-                crossDup.transform.position = new Vector3(node.x, node.y, -1.0f);
-                mainBoard[node.x, node.y] = 2;
+                if (activePlayer == 0)
+                {
+                    //Circle's turn
+                    GameObject circleDup = Instantiate(circle);
+                    circleDup.transform.position = new Vector3(node.x, node.y, -1.0f);
+                }
+                else
+                {
+                    //Cross's turn
+                    GameObject crossDup = Instantiate(cross);
+                    crossDup.transform.position = new Vector3(node.x, node.y, -1.0f);                    
+                }
+                mainBoard[node.x, node.y] = activePlayer + 1;
 
                 turns++;
 
                 if (CheckForWin(mainBoard))
                 {
-                    print("Player 2 wins");
+                    if (activePlayer == 0)
+                    {
+                        print("Player 1 wins");
+                    }
+                    else
+                    {
+                        print("Player 2 wins");
+                    }
                     stopGame = true;
                 }
                 else if (turns == maxTurns)
@@ -223,12 +243,15 @@ public class TicTacToe : MonoBehaviour {
         TicTacToeMCTSNode root = new TicTacToeMCTSNode(size);
         root.parent = null;
         root.BoardState = mainBoard;
-        root.player = player;
+        root.player = player;        
+
 
         TicTacToeMCTSNode current = root;
         bool reset = false;
         int totalIterations = 0;
-        while (totalIterations < 100000)
+        DateTime start = DateTime.Now;
+
+        while((DateTime.Now - start).Milliseconds < Time.fixedDeltaTime * 1000)
         {            
             if (reset)
             {
@@ -285,7 +308,7 @@ public class TicTacToe : MonoBehaviour {
                     else
                     {
                         //All nodes visited
-                        break;
+                        reset = true;
                     }                    
                 }
             }
@@ -326,7 +349,7 @@ public class TicTacToe : MonoBehaviour {
         int currentPlayer = player;
 
         bool isDraw = false;
-        while (CheckForWin(boardState))
+        while (true)
         {
             //Check if its a draw
             if(availableXPosition.Count == 0)
@@ -336,18 +359,22 @@ public class TicTacToe : MonoBehaviour {
             }
 
             //Make a random decision
-            int xIndex = UnityEngine.Random.Range(0, availableXPosition.Count);
-            int yIndex = UnityEngine.Random.Range(0, availableYPosition.Count);
-            int x = availableXPosition[xIndex];
-            int y = availableXPosition[yIndex];
+            int index = UnityEngine.Random.Range(0, availableXPosition.Count);
+            int x = availableXPosition[index];
+            int y = availableXPosition[index];
             
             //Update board state
             boardState[x, y] = currentPlayer + 1;
             currentPlayer = (currentPlayer + 1) % 2;
 
             //Update possibility space
-            availableXPosition.RemoveAt(xIndex);
-            availableYPosition.RemoveAt(yIndex);
+            availableXPosition.RemoveAt(index);
+            availableYPosition.RemoveAt(index);
+
+            if (CheckForWin(boardState))
+            {
+                break;
+            }
         }
 
         bool result = false;
