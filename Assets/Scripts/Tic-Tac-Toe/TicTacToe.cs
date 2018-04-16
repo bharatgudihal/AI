@@ -12,6 +12,10 @@ public class TicTacToe : MonoBehaviour {
     private bool stopGame = false;    
     private int maxTurns;
     private List<GameObject> tokens;
+    private CustomLogWriter logger;
+    private int totalGames = 0;
+    private int circleWins = 0;
+    private int crossWins = 0;
 
     [SerializeField]
     private int size = 9;
@@ -28,6 +32,12 @@ public class TicTacToe : MonoBehaviour {
     private bool doubleAI;
     [SerializeField]
     private Text gameText;
+    [SerializeField]
+    [Range(0.0f,1.0f)]
+    private float circleTime;
+    [SerializeField]
+    [Range(0.0f, 1.0f)]
+    private float crossTime;
 
     // Use this for initialization
     void Start () {
@@ -56,7 +66,8 @@ public class TicTacToe : MonoBehaviour {
         tokens = new List<GameObject>();
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
-
+        logger = gameObject.AddComponent<CustomLogWriter>();
+        logger.filePath = "Tic_Tac_Toe_"+(doubleAI ? "AI_v_AI_" : "")+(size + "x" + size + "_")+(circleTime + "_" + crossTime);
     }
 
     // Update is called once per frame
@@ -86,12 +97,15 @@ public class TicTacToe : MonoBehaviour {
 
                             if (CheckForWin(mainBoard))
                             {
-                                gameText.text = "Circle Wins";
+                                gameText.text = "Cross Wins";
+                                crossWins++;
+                                totalGames++;                                
                                 stopGame = true;
                             }
                             else if (turns == maxTurns)
                             {
                                 gameText.text = "Draw";
+                                totalGames++;
                                 stopGame = true;
                             }
                             else
@@ -106,8 +120,8 @@ public class TicTacToe : MonoBehaviour {
             }
             else
             {
-                //RunMCTS(activePlayer);
-                TicTacToeMCTSNode node = RunMCTS(activePlayer);
+                float difficulty = activePlayer == 0 ? circleTime : crossTime;
+                TicTacToeMCTSNode node = RunMCTS(activePlayer, difficulty);
                 if (activePlayer == 0)
                 {                    
                     //Circle's turn
@@ -133,17 +147,24 @@ public class TicTacToe : MonoBehaviour {
                     if (activePlayer == 0)
                     {
                         gameText.text = "Circle wins";
+                        circleWins++;
+                        totalGames++;
                     }
                     else
                     {
                         gameText.text = "Cross wins";
+                        crossWins++;
+                        totalGames++;
                     }
                     stopGame = true;
+                    CheckToRestart();
                 }
                 else if (turns == maxTurns)
                 {
                     gameText.text = "Draw";
+                    totalGames++;
                     stopGame = true;
+                    CheckToRestart();
                 }
                 else
                 {
@@ -161,6 +182,17 @@ public class TicTacToe : MonoBehaviour {
             }
         }
 	}
+
+    private void CheckToRestart()
+    {
+        if (doubleAI && totalGames < 100)
+        {
+            ResetBoard();
+        }else if(totalGames >= 100)
+        {
+            WriteLog();
+        }
+    }
 
     private bool CheckForWin(int[,] board)
     {
@@ -265,7 +297,7 @@ public class TicTacToe : MonoBehaviour {
     }
 
     //Reference:https://www.youtube.com/watch?v=UXW2yZndl7U
-    private TicTacToeMCTSNode RunMCTS(int player)
+    private TicTacToeMCTSNode RunMCTS(int player, float difficulty)
     {
         TicTacToeMCTSNode root = new TicTacToeMCTSNode(size);
         root.parent = null;
@@ -278,7 +310,7 @@ public class TicTacToe : MonoBehaviour {
         int totalIterations = 0;
         DateTime start = DateTime.Now;
 
-        while((DateTime.Now - start).Milliseconds < Time.fixedDeltaTime * 1000)
+        while((DateTime.Now - start).Milliseconds < Time.fixedDeltaTime * 1000 * difficulty)
         {            
             if (reset)
             {
@@ -479,14 +511,6 @@ public class TicTacToe : MonoBehaviour {
             {
                 successfulPlayouts++;
             }
-            //else
-            //{
-            //    successfulPlayouts--;
-            //    if(successfulPlayouts < 0)
-            //    {
-            //        successfulPlayouts = 0;
-            //    }
-            //}
 
             if (parent != null)
             {
@@ -542,5 +566,13 @@ public class TicTacToe : MonoBehaviour {
                 mainBoard[i, j] = 0;
             }
         }
+    }
+
+    public void WriteLog()
+    {
+        logger.Write("Total games: " + totalGames);
+        logger.Write("Total cross wins: " + crossWins);
+        logger.Write("Total circle wins: " + circleWins);
+        logger.Write("Total draws: " + (totalGames - (crossWins + circleWins)));
     }
 }
