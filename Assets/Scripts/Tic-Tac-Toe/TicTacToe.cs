@@ -23,7 +23,7 @@ public class TicTacToe : MonoBehaviour {
     [SerializeField]
     private GameObject blackTile;
     [SerializeField]
-    private bool AIvsAI;
+    private bool doubleAI;
 
     // Use this for initialization
     void Start () {
@@ -58,7 +58,7 @@ public class TicTacToe : MonoBehaviour {
     {
         if (!stopGame)
         {
-            if (activePlayer == 1 && !AIvsAI)
+            if (activePlayer == 1 && !doubleAI)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -349,7 +349,7 @@ public class TicTacToe : MonoBehaviour {
         int currentPlayer = player;
 
         bool isDraw = false;
-        while (true)
+        while (CheckForWin(boardState))
         {
             //Check if its a draw
             if(availableXPosition.Count == 0)
@@ -370,11 +370,6 @@ public class TicTacToe : MonoBehaviour {
             //Update possibility space
             availableXPosition.RemoveAt(index);
             availableYPosition.RemoveAt(index);
-
-            if (CheckForWin(boardState))
-            {
-                break;
-            }
         }
 
         bool result = false;
@@ -457,6 +452,14 @@ public class TicTacToe : MonoBehaviour {
             {
                 successfulPlayouts++;
             }
+            //else
+            //{
+            //    successfulPlayouts--;
+            //    if(successfulPlayouts < 0)
+            //    {
+            //        successfulPlayouts = 0;
+            //    }
+            //}
 
             if (parent != null)
             {
