@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class TicTacToe : MonoBehaviour {
 
@@ -9,7 +10,8 @@ public class TicTacToe : MonoBehaviour {
     private int activePlayer = 0;
     private int turns = 0;
     private bool stopGame = false;    
-    private int maxTurns;    
+    private int maxTurns;
+    private List<GameObject> tokens;
 
     [SerializeField]
     private int size = 9;
@@ -24,10 +26,12 @@ public class TicTacToe : MonoBehaviour {
     private GameObject blackTile;
     [SerializeField]
     private bool doubleAI;
+    [SerializeField]
+    private Text gameText;
 
     // Use this for initialization
     void Start () {
-
+        
         mainBoard = new int[size, size];
         maxTurns = size * size;
 
@@ -45,9 +49,11 @@ public class TicTacToe : MonoBehaviour {
                     tile = Instantiate(blackTile);
                 }
                 tile.transform.position = new Vector3(i, j, 0.0f);
+                tile.transform.parent = transform;
             }
         }
 
+        tokens = new List<GameObject>();
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
 
@@ -65,7 +71,7 @@ public class TicTacToe : MonoBehaviour {
                     RaycastHit hit;
                     Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                     if (Physics.Raycast(ray, out hit))
-                    {
+                    {                        
                         Vector3 position = hit.transform.position;
                         int i = (int)position.x;
                         int j = (int)position.y;
@@ -73,18 +79,24 @@ public class TicTacToe : MonoBehaviour {
                         {
                             GameObject crossDup = Instantiate(cross);
                             crossDup.transform.position = new Vector3(position.x, position.y, -1.0f);
+                            crossDup.transform.parent = transform;
+                            tokens.Add(crossDup);
                             mainBoard[i, j] = activePlayer + 1;
                             turns++;
 
                             if (CheckForWin(mainBoard))
                             {
-                                print("Player 2 wins");
+                                gameText.text = "Circle Wins";
                                 stopGame = true;
                             }
                             else if (turns == maxTurns)
                             {
-                                print("Draw");
+                                gameText.text = "Draw";
                                 stopGame = true;
+                            }
+                            else
+                            {
+                                gameText.text = "Cross's Turn";
                             }
                             activePlayer++;
                             activePlayer %= 2;
@@ -97,16 +109,20 @@ public class TicTacToe : MonoBehaviour {
                 //RunMCTS(activePlayer);
                 TicTacToeMCTSNode node = RunMCTS(activePlayer);
                 if (activePlayer == 0)
-                {
+                {                    
                     //Circle's turn
                     GameObject circleDup = Instantiate(circle);
                     circleDup.transform.position = new Vector3(node.x, node.y, -1.0f);
+                    circleDup.transform.parent = transform;
+                    tokens.Add(circleDup);
                 }
                 else
                 {
                     //Cross's turn
                     GameObject crossDup = Instantiate(cross);
-                    crossDup.transform.position = new Vector3(node.x, node.y, -1.0f);                    
+                    crossDup.transform.position = new Vector3(node.x, node.y, -1.0f);
+                    crossDup.transform.parent = transform;
+                    tokens.Add(crossDup);
                 }
                 mainBoard[node.x, node.y] = activePlayer + 1;
 
@@ -116,18 +132,29 @@ public class TicTacToe : MonoBehaviour {
                 {
                     if (activePlayer == 0)
                     {
-                        print("Player 1 wins");
+                        gameText.text = "Circle wins";
                     }
                     else
                     {
-                        print("Player 2 wins");
+                        gameText.text = "Cross wins";
                     }
                     stopGame = true;
                 }
                 else if (turns == maxTurns)
                 {
-                    print("Draw");
+                    gameText.text = "Draw";
                     stopGame = true;
+                }
+                else
+                {
+                    if(activePlayer == 0)
+                    {
+                        gameText.text = "Cross's Turn";
+                    }
+                    else
+                    {
+                        gameText.text = "Circle's Turn";
+                    }
                 }
                 activePlayer++;
                 activePlayer %= 2;
@@ -494,6 +521,26 @@ public class TicTacToe : MonoBehaviour {
         public bool HasBeenVisited()
         {
             return totalPlayouts > 0;
+        }
+    }
+
+    public void ResetBoard()
+    {
+        for(int i=0; i < tokens.Count; i++)
+        {
+            Destroy(tokens[i]);
+        }
+        tokens.Clear();
+        turns = 0;
+        stopGame = false;
+        activePlayer = 0;
+
+        for (int i = 0; i < size; i++)
+        {
+            for(int j = 0; j < size; j++)
+            {
+                mainBoard[i, j] = 0;
+            }
         }
     }
 }
