@@ -792,15 +792,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32141d3c106711b48b31655ef48c51fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  size: 9
   cross: {fileID: 1143203019439520, guid: 4cf82474e42704e44b17c435f3399d9b, type: 2}
   circle: {fileID: 1273664367009030, guid: c43d45914a617794fb82832692953162, type: 2}
   whiteTile: {fileID: 1611015887583626, guid: 123c855bbcac13443b18a864b25117c5, type: 2}
   blackTile: {fileID: 1976792972057660, guid: 7ee82069886182c408ec516a43b09fff, type: 2}
+  size: 5
+  currentIteration: 0
+  numberOfIterations: 50
   doubleAI: 1
   gameText: {fileID: 1262364465}
   circleTime: 1
-  crossTime: 0.1
+  crossTime: 1
 --- !u!4 &1745896966
 Transform:
   m_ObjectHideFlags: 0
