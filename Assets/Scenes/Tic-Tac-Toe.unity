@@ -796,13 +796,13 @@ MonoBehaviour:
   circle: {fileID: 1273664367009030, guid: c43d45914a617794fb82832692953162, type: 2}
   whiteTile: {fileID: 1611015887583626, guid: 123c855bbcac13443b18a864b25117c5, type: 2}
   blackTile: {fileID: 1976792972057660, guid: 7ee82069886182c408ec516a43b09fff, type: 2}
-  size: 5
+  size: 3
   currentIteration: 0
   numberOfIterations: 50
-  doubleAI: 1
+  doubleAI: 0
   gameText: {fileID: 1262364465}
   circleTime: 1
-  crossTime: 1
+  crossTime: 2
 --- !u!4 &1745896966
 Transform:
   m_ObjectHideFlags: 0

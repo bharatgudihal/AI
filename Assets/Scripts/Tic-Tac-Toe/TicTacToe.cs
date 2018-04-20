@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using TTT;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -16,7 +17,7 @@ public class TicTacToe : MonoBehaviour {
     private int circleWins = 0;
     private int crossWins = 0;
     private float minSize = 3.0f;
-        
+
     [SerializeField]
     private GameObject cross;
     [SerializeField]
@@ -42,7 +43,7 @@ public class TicTacToe : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        
+
         mainBoard = new int[size, size];
         maxTurns = size * size;
 
@@ -69,6 +70,8 @@ public class TicTacToe : MonoBehaviour {
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
         logger = gameObject.AddComponent<CustomLogWriter>();
         logger.filePath = "Tic_Tac_Toe_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + (circleTime + "_" + crossTime) + ("_" + numberOfIterations);
+
+        ResetBoard();
     }
 
     // Update is called once per frame
@@ -76,7 +79,7 @@ public class TicTacToe : MonoBehaviour {
     {
         if (!stopGame)
         {
-            if (activePlayer == 1 && !doubleAI)
+            if (activePlayer == 0 && !doubleAI)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -87,18 +90,18 @@ public class TicTacToe : MonoBehaviour {
                         Vector3 position = hit.transform.position;
                         int i = (int)position.x;
                         int j = (int)position.y;
-                        if (mainBoard[i, j] == 0)
+                        if (mainBoard[i, j] == -1)
                         {
-                            GameObject crossDup = Instantiate(cross);
-                            crossDup.transform.position = new Vector3(position.x, position.y, -1.0f);
-                            crossDup.transform.parent = transform;
-                            tokens.Add(crossDup);
-                            mainBoard[i, j] = activePlayer + 1;
+                            GameObject circleDup = Instantiate(circle);
+                            circleDup.transform.position = new Vector3(position.x, position.y, -1.0f);
+                            circleDup.transform.parent = transform;
+                            tokens.Add(circleDup);
+                            mainBoard[i, j] = activePlayer;
                             turns++;
 
                             if (CheckForWin(mainBoard))
                             {
-                                gameText.text = "Cross Wins";
+                                gameText.text = "Circle Wins";
                                 crossWins++;
                                 currentIteration++;                                
                                 stopGame = true;
@@ -122,7 +125,7 @@ public class TicTacToe : MonoBehaviour {
             else
             {
                 float difficulty = activePlayer == 0 ? circleTime : crossTime;
-                TicTacToeMCTSNode node = RunMCTS(activePlayer, difficulty);
+                MCTSNode node = RunMCTS(activePlayer, difficulty);
                 if (activePlayer == 0)
                 {                    
                     //Circle's turn
@@ -139,7 +142,7 @@ public class TicTacToe : MonoBehaviour {
                     crossDup.transform.parent = transform;
                     tokens.Add(crossDup);
                 }
-                mainBoard[node.x, node.y] = activePlayer + 1;
+                mainBoard[node.x, node.y] = activePlayer;
 
                 turns++;
 
@@ -201,7 +204,7 @@ public class TicTacToe : MonoBehaviour {
         bool result = false;
         for(int i = 0; i < size - 1; i++)
         {
-            if(board[i,i] == 0)
+            if(board[i,i] == -1)
             {
                 result = false;
                 break;
@@ -221,7 +224,7 @@ public class TicTacToe : MonoBehaviour {
         result = false;
         for (int i = 0; i < size - 1; i++)
         {
-            if (board[i, size - 1 - i] == 0)
+            if (board[i, size - 1 - i] == -1)
             {
                 result = false;
                 break;
@@ -244,7 +247,7 @@ public class TicTacToe : MonoBehaviour {
         {            
             for(int j = 0; j < size - 1; j++)
             {
-                if (board[i, j] == 0)
+                if (board[i, j] == -1)
                 {
                     result = false;
                     break;
@@ -272,7 +275,7 @@ public class TicTacToe : MonoBehaviour {
         {
             for (int j = 0; j < size - 1; j++)
             {
-                if (board[j, i] == 0)
+                if (board[j, i] == -1)
                 {
                     result = false;
                     break;
@@ -298,91 +301,56 @@ public class TicTacToe : MonoBehaviour {
     }
 
     //Reference:https://www.youtube.com/watch?v=UXW2yZndl7U
-    private TicTacToeMCTSNode RunMCTS(int player, float modifier)
+    private MCTSNode RunMCTS(int player, float modifier)
     {
-        TicTacToeMCTSNode root = new TicTacToeMCTSNode(size);
-        root.parent = null;
+        MCTSNode root = new MCTSNode(size);
         root.BoardState = mainBoard;
-        root.player = player;        
+        root.parent = null;
+        root.player = activePlayer;
+        root.score = 0.0f;
+        root.totalPlayouts = 0.0f;
 
-
-        TicTacToeMCTSNode current = root;
-        bool reset = false;
-        int totalIterations = 0;
         DateTime start = DateTime.Now;
 
-        while((DateTime.Now - start).Milliseconds < Time.fixedDeltaTime * 1000 * modifier * (size / minSize))
-        {            
-            if (reset)
-            {
-                current = root;
-                reset = false;
-            }
-
-            //Expand
-            if (current.children.Count == 0)
-            {
-                current.PopulateChildren();
-            }
-
-            //Select
-            {
-                float maxUCB = 0.0f;
-                int selectedIndex = 0;
-                bool simulationRun = false;
-                for (int i = 0; i < current.children.Count; i++)
-                {
-                    if (!current.children[i].HasBeenVisited())
-                    {
-                        //Simulate
-                        float score = Simulate(current.children[i].BoardState, current.children[i].player);
-                        current.children[i].Update(true, score);
-                        
-                        simulationRun = true;
-                        reset = true;
-                        totalIterations++;
-                        break;
-                    }
-                    else
-                    {
-                        float UCB = current.children[i].UCB1();                        
-                        if (maxUCB < UCB)
-                        {
-                            maxUCB = UCB;
-                            selectedIndex = i;
-                        }
-                    }
-                }
-
-                if (!simulationRun)
-                {
-                    if(selectedIndex < current.children.Count)
-                    {
-                        current = current.children[selectedIndex];
-                    }
-                    else
-                    {
-                        //All nodes visited
-                        reset = true;
-                    }                    
-                }
-            }
-        }
-
-        //Make final selection
-        float finalMaxUCB = 0.0f;
-        int finalSelectedIndex = 0;
-        for (int i = 0; i < root.children.Count; i++)
+        while((DateTime.Now - start).Milliseconds < Time.maximumDeltaTime * 1000)
         {
-            float UCB = root.children[i].UCB1();
-            if (finalMaxUCB < UCB)
+            MCTSNode current = root;
+
+            //Selection
+            while(current.children.Count != 0)
             {
-                finalMaxUCB = UCB;
-                finalSelectedIndex = i;
+                current = current.GetChildWithBestUCB1();
+            }
+
+            //Simulation
+            if(current.totalPlayouts == 0)
+            {
+                float score = Simulate(current.BoardState, current.player);
+
+                //Backpropogate
+                current.BackPropogate(current.player, score);
+            }
+            else
+            {
+                //Expansion
+                current.Expand();
+            }
+       
+        }
+
+        //Find node with best score
+        float bestScore = root.children[0].score;
+        int selectedIndex = 0;
+        for(int i = 1; i < root.children.Count; i++)
+        {
+            if(bestScore < root.children[i].score)
+            {
+                bestScore = root.children[i].score;
+                selectedIndex = i;
             }
         }
-        TicTacToeMCTSNode selectedNode = root.children[finalSelectedIndex];
-        return selectedNode;
+
+        return root.children[selectedIndex];
     }
 
     private float Simulate(int[,] boardState, int player)
@@ -393,7 +361,7 @@ public class TicTacToe : MonoBehaviour {
         {
             for (int j = 0; j < size; j++)
             {
-                if (boardState[i, j] == 0)
+                if (boardState[i, j] == -1)
                 {
                     availableXPosition.Add(i);
                     availableYPosition.Add(j);
@@ -421,7 +389,7 @@ public class TicTacToe : MonoBehaviour {
             int y = availableXPosition[index];
             
             //Update board state
-            boardState[x, y] = currentPlayer + 1;
+            boardState[x, y] = currentPlayer;
             currentPlayer = (currentPlayer + 1) % 2;
 
             //Update possibility space
@@ -445,10 +413,41 @@ public class TicTacToe : MonoBehaviour {
         return result;
     }
 
-    public class TicTacToeMCTSNode
+    public void ResetBoard()
     {
-        public List<TicTacToeMCTSNode> children = new List<TicTacToeMCTSNode>();
-        public TicTacToeMCTSNode parent;
+        for (int i = 0; i < tokens.Count; i++)
+        {
+            Destroy(tokens[i]);
+        }
+        tokens.Clear();
+        turns = 0;
+        stopGame = false;
+        activePlayer = 0;
+        
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                mainBoard[i, j] = -1;
+            }
+        }        
+    }
+
+    public void WriteLog()
+    {
+        logger.Write("Total games: " + currentIteration);
+        logger.Write("Total circle wins: " + circleWins);
+        logger.Write("Total cross wins: " + crossWins);
+        logger.Write("Total draws: " + (currentIteration - (crossWins + circleWins)));
+    }
+}
+
+namespace TTT
+{
+    public class MCTSNode
+    {
+        public List<MCTSNode> children = new List<MCTSNode>();
+        public MCTSNode parent;
         public float score = 0;
         public float totalPlayouts = 0;
         public int player;
@@ -458,7 +457,7 @@ public class TicTacToe : MonoBehaviour {
         private int size;
         private int[,] boardState;
 
-        public TicTacToeMCTSNode(int size)
+        public MCTSNode(int size)
         {
             this.size = size;
         }
@@ -492,85 +491,80 @@ public class TicTacToe : MonoBehaviour {
             }
         }
 
-        public float UCB1()
+        public float UCB1
         {
-            float N = 0.0f;
-            if (parent != null)
-            {
-                N = parent.totalPlayouts;
+            get{
+                float N = 0.0f;
+                if (parent != null)
+                {
+                    N = parent.totalPlayouts;
+                }
+
+                if (totalPlayouts == 0.0f)
+                {
+                    return Mathf.Infinity;
+                }
+                else
+                {                    
+                    return (score / totalPlayouts) + Mathf.Sqrt(2.0f * Mathf.Log(N) / totalPlayouts);
+                }
             }
-            return (score / totalPlayouts) + Mathf.Sqrt(2.0f * Mathf.Log(N) / totalPlayouts);
         }
 
-        public void Update(bool currentPlayer, float value)
+        public void BackPropogate(int currentPlayer, float value)
         {
             totalPlayouts++;
-            if (currentPlayer)
+            if (currentPlayer == player)
             {
                 score += value;
             }
 
             if (parent != null)
             {
-                parent.Update(!currentPlayer, 1.0f - value);
+                parent.BackPropogate(currentPlayer, value);
             }
         }
 
-        public void PopulateChildren()
+        public void Expand()
         {
-            for (int i = 0; i < size; i++)
+            if (children.Count == 0)
             {
-                for (int j = 0; j < size; j++)
+                for (int i = 0; i < size; i++)
                 {
-                    if (boardState[i, j] == 0)
+                    for (int j = 0; j < size; j++)
                     {
-                        //Change state
-                        boardState[i, j] = player + 1;
-                        TicTacToeMCTSNode child = new TicTacToeMCTSNode(size);
-                        child.parent = this;
-                        child.BoardState = boardState;
-                        child.x = i;
-                        child.y = j;
-                        child.player = (player + 1) % 2;
-                        children.Add(child);
-                        //Reset state
-                        boardState[i, j] = 0;
+                        if (boardState[i, j] == -1)
+                        {
+                            //Change state
+                            boardState[i, j] = player;
+                            MCTSNode child = new MCTSNode(size);
+                            child.parent = this;
+                            child.BoardState = boardState;
+                            child.x = i;
+                            child.y = j;
+                            child.player = (player + 1) % 2;
+                            children.Add(child);
+                            //Reset state
+                            boardState[i, j] = -1;
+                        }
                     }
                 }
             }
         }
 
-        public bool HasBeenVisited()
+        internal MCTSNode GetChildWithBestUCB1()
         {
-            return totalPlayouts > 0;
-        }
-    }
-
-    public void ResetBoard()
-    {
-        for(int i=0; i < tokens.Count; i++)
-        {
-            Destroy(tokens[i]);
-        }
-        tokens.Clear();
-        turns = 0;
-        stopGame = false;
-        activePlayer = 0;
-
-        for (int i = 0; i < size; i++)
-        {
-            for(int j = 0; j < size; j++)
+            float maxUCB1 = children[0].UCB1;
+            int selectedIndex = 0;
+            for(int i = 1; i < children.Count; i++)
             {
-                mainBoard[i, j] = 0;
+                if(maxUCB1 < children[i].UCB1)
+                {
+                    maxUCB1 = children[i].UCB1;
+                    selectedIndex = i;
+                }
             }
+            return children[selectedIndex];
         }
-    }
-
-    public void WriteLog()
-    {
-        logger.Write("Total games: " + currentIteration);
-        logger.Write("Total circle wins: " + circleWins);
-        logger.Write("Total cross wins: " + crossWins);
-        logger.Write("Total draws: " + (currentIteration - (crossWins + circleWins)));
     }
 }
