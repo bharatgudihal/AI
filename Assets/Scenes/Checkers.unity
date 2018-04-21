@@ -644,7 +644,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1745896965}
+      - m_Target: {fileID: 1745896967}
         m_MethodName: WriteLog
         m_Mode: 1
         m_Arguments:
@@ -773,7 +773,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1745896966}
-  - component: {fileID: 1745896965}
+  - component: {fileID: 1745896967}
   m_Layer: 0
   m_Name: Board
   m_TagString: Untagged
@@ -781,28 +781,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1745896965
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1745896964}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32141d3c106711b48b31655ef48c51fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  cross: {fileID: 1143203019439520, guid: 4cf82474e42704e44b17c435f3399d9b, type: 2}
-  circle: {fileID: 1273664367009030, guid: c43d45914a617794fb82832692953162, type: 2}
-  whiteTile: {fileID: 1611015887583626, guid: 123c855bbcac13443b18a864b25117c5, type: 2}
-  blackTile: {fileID: 1976792972057660, guid: 7ee82069886182c408ec516a43b09fff, type: 2}
-  size: 3
-  currentIteration: 0
-  numberOfIterations: 50
-  doubleAI: 0
-  gameText: {fileID: 1262364465}
-  circleTime: 2
-  crossTime: 2
 --- !u!4 &1745896966
 Transform:
   m_ObjectHideFlags: 0
@@ -817,6 +795,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1745896967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1745896964}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a4661e08fa6d9245886673df8f5a98e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player1Token: {fileID: 1273664367009030, guid: 5ab7eca76fca73a40a571169a33002dd,
+    type: 2}
+  player2Token: {fileID: 1273664367009030, guid: 829b41e9dafaa0745810443b069d1d71,
+    type: 2}
+  whiteTile: {fileID: 1611015887583626, guid: 7dbf9b8aea3d78c4aa7db9a96138b0b6, type: 2}
+  brownTile: {fileID: 1804679992092190, guid: 00b11562a9785e94082260273c1423b4, type: 2}
+  currentIteration: 0
+  numberOfIterations: 0
+  doubleAI: 0
+  gameText: {fileID: 1262364465}
 --- !u!1 &2012728608
 GameObject:
   m_ObjectHideFlags: 0
@@ -893,7 +892,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1745896965}
+      - m_Target: {fileID: 1745896967}
         m_MethodName: ResetBoard
         m_Mode: 1
         m_Arguments:

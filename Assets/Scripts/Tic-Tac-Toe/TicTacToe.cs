@@ -306,13 +306,16 @@ public class TicTacToe : MonoBehaviour {
         MCTSNode root = new MCTSNode(size);
         root.BoardState = mainBoard;
         root.parent = null;
-        root.player = activePlayer;
+        root.player = (activePlayer + 1) % 2;
         root.score = 0.0f;
         root.totalPlayouts = 0.0f;
+        int totalIterations = 0;
 
         DateTime start = DateTime.Now;
 
-        while((DateTime.Now - start).Milliseconds < Time.maximumDeltaTime * 1000)
+
+        //while((DateTime.Now - start).Milliseconds < Time.maximumDeltaTime * 1000 * modifier)
+        while (totalIterations < 100000)
         {
             MCTSNode current = root;
 
@@ -325,27 +328,29 @@ public class TicTacToe : MonoBehaviour {
             //Simulation
             if(current.totalPlayouts == 0)
             {
-                float score = Simulate(current.BoardState, current.player);
+                float score = Simulate(current.BoardState, activePlayer);
 
-                //Backpropogate
-                current.BackPropogate(current.player, score);
+                //Back Propogate
+                current.BackPropogate(score);
             }
             else
             {
                 //Expansion
                 current.Expand();
             }
-       
+
+            totalIterations++;
         }
 
         //Find node with best score
-        float bestScore = root.children[0].score;
+        float bestScore = root.children[0].score / root.children[0].totalPlayouts;
         int selectedIndex = 0;
         for(int i = 1; i < root.children.Count; i++)
         {
-            if(bestScore < root.children[i].score)
+            float score = root.children[i].score / root.children[i].totalPlayouts;
+            if (bestScore < score)
             {
-                bestScore = root.children[i].score;
+                bestScore = score;
                 selectedIndex = i;
             }
         }
@@ -353,7 +358,7 @@ public class TicTacToe : MonoBehaviour {
         return root.children[selectedIndex];
     }
 
-    private float Simulate(int[,] boardState, int player)
+    private float Simulate(int[,] boardState, int testingPlayer)
     {
         List<int> availableXPosition = new List<int>();
         List<int> availableYPosition = new List<int>();
@@ -369,12 +374,10 @@ public class TicTacToe : MonoBehaviour {
             }
         }
 
-        int currentPlayer = player;
-
+        int currentPlayer = testingPlayer;
         bool isDraw = false;
-        System.Random random = new System.Random(1024);
 
-        while (CheckForWin(boardState))
+        while (!CheckForWin(boardState))
         {
             //Check if its a draw
             if(availableXPosition.Count == 0)
@@ -384,10 +387,10 @@ public class TicTacToe : MonoBehaviour {
             }
 
             //Make a random decision
-            int index = random.Next(0, availableXPosition.Count);
+            int index = UnityEngine.Random.Range(0, availableXPosition.Count);
             int x = availableXPosition[index];
-            int y = availableXPosition[index];
-            
+            int y = availableYPosition[index];
+
             //Update board state
             boardState[x, y] = currentPlayer;
             currentPlayer = (currentPlayer + 1) % 2;
@@ -401,13 +404,13 @@ public class TicTacToe : MonoBehaviour {
         if (isDraw)
         {
             //Draw is considered a 50%
-            result = 0.5f;
+            result = 1.0f;
         }
         else
         {
             //Because we update the current player at the end of each turn,
             //if current player is not equal to the player that originally started the simulation, the original player has won
-            result = currentPlayer != player ? 1.0f : 0.0f;            
+            result = currentPlayer == testingPlayer ? 1.0f : 0.0f;
         }
 
         return result;
@@ -506,22 +509,19 @@ namespace TTT
                 }
                 else
                 {                    
-                    return (score / totalPlayouts) + Mathf.Sqrt(2.0f * Mathf.Log(N) / totalPlayouts);
+                    return (score / totalPlayouts) + 2.0f * Mathf.Sqrt(Mathf.Log(N) / totalPlayouts);
                 }
             }
         }
 
-        public void BackPropogate(int currentPlayer, float value)
+        public void BackPropogate(float value)
         {
-            totalPlayouts++;
-            if (currentPlayer == player)
-            {
-                score += value;
-            }
+            totalPlayouts++;           
+            score += value;
 
             if (parent != null)
             {
-                parent.BackPropogate(currentPlayer, value);
+                parent.BackPropogate(value);
             }
         }
 
