@@ -10,14 +10,22 @@ public class Checkers : MonoBehaviour {
     private int[,] mainBoard;
     private int activePlayer = 0;
     private bool stopGame = false;
-    private List<GameObject> player1Tokens;
-    private List<GameObject> player2Tokens;
+    private List<Token> player1Tokens;
+    private List<Token> player2Tokens;
     private CustomLogWriter logger;    
     private int player1Wins = 0;
     private int player2Wins = 0;
-    private float minSize = 3.0f;
     private int size = 8;
     private int numberOfTokens = 12;
+
+    private enum PlayState
+    {
+        SELECTION,
+        PLACEMENT
+    }
+
+    private PlayState currentPlayState;
+    private Token selectedToken;
 
     [SerializeField]
     private GameObject player1Token;
@@ -26,7 +34,7 @@ public class Checkers : MonoBehaviour {
     [SerializeField]
     private GameObject whiteTile;
     [SerializeField]
-    private GameObject brownTile;
+    private GameObject blackTile;
     [SerializeField]
     private int currentIteration = 0;
     [SerializeField]
@@ -52,26 +60,26 @@ public class Checkers : MonoBehaviour {
                 }
                 else
                 {
-                    tile = Instantiate(brownTile);
+                    tile = Instantiate(blackTile);
                 }
                 tile.transform.position = new Vector3(i, j, 0.0f);
                 tile.transform.parent = transform;
             }
         }
 
-        player1Tokens = new List<GameObject>();
-        player2Tokens = new List<GameObject>();
+        player1Tokens = new List<Token>();
+        player2Tokens = new List<Token>();
 
         for(int i = 0; i < numberOfTokens; i++)
         {
-            player1Tokens.Add(Instantiate(player1Token));
-            player2Tokens.Add(Instantiate(player2Token));
+            player1Tokens.Add(new Token(Instantiate(player1Token)));
+            player2Tokens.Add(new Token(Instantiate(player2Token)));
         }
 
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
         logger = gameObject.AddComponent<CustomLogWriter>();
-        logger.filePath = "Tic_Tac_Toe_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations;
+        logger.filePath = "Checkers_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations;
 
         ResetBoard();
     }
@@ -79,8 +87,207 @@ public class Checkers : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        
+        if (!stopGame)
+        {
+            if (activePlayer == 0)
+            {
+                if (Input.GetMouseButtonDown(0) && !doubleAI)
+                {
+                    RaycastHit hit;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (currentPlayState == PlayState.SELECTION)
+                    {
+                        if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("Token")))
+                        {
+                            selectedToken = GetSelectedToken(player1Tokens, hit.transform.position);
+                            if (selectedToken != null)
+                            {
+                                currentPlayState = PlayState.PLACEMENT;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("Board")))
+                        {
+                            Vector3 hitPosition = hit.transform.position;
+                            if (IsValidMovePosition(hitPosition))
+                            {
+                                UpdateSelectedTokenPosition(hitPosition);
+                            }else if (IsValidJumpPosition(hitPosition))
+                            {
+                                RemoveJumpedToken(hitPosition);
+                                UpdateSelectedTokenPosition(hitPosition);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //AI code
+            }
+        }
 	}
+
+    private void RemoveJumpedToken(Vector3 hitPosition)
+    {
+        int x = (int)hitPosition.x;
+        int y = (int)hitPosition.y;
+        int tokenX = selectedToken.xPosition;
+        int tokenY = selectedToken.yPosition;
+        int midX = (tokenX + x) / 2;
+        int midY = (tokenY + y) / 2;
+
+        Vector3 position = new Vector3(midX, midY, -1.0f);
+        Token token = null;
+        if(activePlayer == 0)
+        {
+            token = GetSelectedToken(player2Tokens, position);
+        }
+        else
+        {
+            token = GetSelectedToken(player1Tokens, position);
+        }
+        Debug.Assert(token != null);
+
+        token.IsAlive = false;
+        mainBoard[midX, midY] = -1;
+    }
+
+    private bool IsValidJumpPosition(Vector3 hitPosition)
+    {
+        int x = (int)hitPosition.x;
+        int y = (int)hitPosition.y;
+        int tokenX = selectedToken.xPosition;
+        int tokenY = selectedToken.yPosition;
+        int midX = (tokenX + x) / 2;
+        int midY = (tokenY + y) / 2;
+        bool result = false;
+        int opponent = (activePlayer + 1) % 2;
+
+        if (mainBoard[x,y] == -1 && mainBoard[midX, midY] == opponent)
+        {            
+            if (selectedToken.isKing)
+            {
+                int manhattanDistance = Math.Abs(tokenX - x) + Math.Abs(tokenY - y);
+                
+
+                if (manhattanDistance == 4)
+                {
+                    result = true;
+                }
+            }
+            else
+            {
+                if (activePlayer == 0)
+                {
+                    if (tokenY < y)
+                    {
+                        int manhattanDistance = Math.Abs(tokenX - x) + y - tokenY;
+                        if (manhattanDistance == 4)
+                        {
+                            result = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (tokenY > y)
+                    {
+                        int manhattanDistance = Math.Abs(tokenX - x) + tokenY - y;
+                        if (manhattanDistance == 4)
+                        {
+                            result = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private void UpdateSelectedTokenPosition(Vector3 hitPosition)
+    {
+        int oldX = selectedToken.xPosition;
+        int oldY = selectedToken.yPosition;
+        int newX = (int)hitPosition.x;
+        int newY = (int)hitPosition.y;
+        mainBoard[oldX, oldY] = -1;
+        mainBoard[newX, newY] = activePlayer;
+        selectedToken.gameObject.transform.position = new Vector3(hitPosition.x, hitPosition.y, -1);
+        currentPlayState = PlayState.SELECTION;
+    }
+
+    private bool IsValidMovePosition(Vector3 hitPosition)
+    {
+        int x = (int)hitPosition.x;
+        int y = (int)hitPosition.y;
+        int tokenX = selectedToken.xPosition;
+        int tokenY = selectedToken.yPosition;
+        bool result = false;
+
+        //Is position open?
+        if (mainBoard[x, y] == -1)
+        {
+            //Is the token king?
+            if (selectedToken.isKing)
+            {
+                int manhattanDistance = Math.Abs(tokenX - x) + Math.Abs(tokenY - y);
+                //Is it 1 diagonal space in any direction?
+                if (manhattanDistance == 2)
+                {
+                    result = true;
+                }
+            }
+            else
+            {
+                if(activePlayer == 0)
+                {
+                    if(tokenY < y)
+                    {
+                        int manhattanDistance = Math.Abs(tokenX - x) + y - tokenY;
+                        if (manhattanDistance == 2)
+                        {
+                            result = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (tokenY > y)
+                    {
+                        int manhattanDistance = Math.Abs(tokenX - x) + tokenY - y;
+                        if (manhattanDistance == 2)
+                        {
+                            result = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private Token GetSelectedToken(List<Token> playerTokens, Vector3 position)
+    {
+        Token result = null;
+        for(int i = 0; i < playerTokens.Count; i++)
+        {
+            Token token = playerTokens[i];
+            if (token.IsAlive)
+            {
+                if(token.gameObject.transform.position == position)
+                {
+                    result = token;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
 
     private void CheckToRestart()
     {
@@ -121,7 +328,7 @@ public class Checkers : MonoBehaviour {
             {
                 if((i + j) % 2 == 1)
                 {
-                    player1Tokens[currentToken].transform.position = new Vector3(i, j, -1.0f);
+                    player1Tokens[currentToken].gameObject.transform.position = new Vector3(i, j, -1.0f);
                     currentToken++;
                     mainBoard[i, j] = 0;
                 }
@@ -135,7 +342,7 @@ public class Checkers : MonoBehaviour {
             {
                 if ((i + j) % 2 == 1)
                 {
-                    player2Tokens[currentToken].transform.position = new Vector3(i, j, -1.0f);
+                    player2Tokens[currentToken].gameObject.transform.position = new Vector3(i, j, -1.0f);
                     currentToken++;
                     mainBoard[i, j] = 1;
                 }
@@ -143,7 +350,8 @@ public class Checkers : MonoBehaviour {
         }
 
         stopGame = false;
-        activePlayer = 0;               
+        activePlayer = 0;
+        currentPlayState = PlayState.SELECTION;
     }
 
     public void WriteLog()
@@ -157,6 +365,46 @@ public class Checkers : MonoBehaviour {
 
 namespace CheckersNS
 {
+    public class Token
+    {
+        public Token(GameObject gameObject)
+        {
+            this.gameObject = gameObject;
+        }        
+
+        public bool IsAlive
+        {
+            set
+            {
+                gameObject.SetActive(value);
+            }
+
+            get
+            {
+                return gameObject.activeSelf;
+            }
+        }
+
+        public int xPosition
+        {
+            get
+            {
+                return (int)gameObject.transform.position.x;
+            }
+        }
+
+        public int yPosition
+        {
+            get
+            {
+                return (int)gameObject.transform.position.y;
+            }
+        }
+
+        public GameObject gameObject;
+        public bool isKing;
+    }
+
     public class MCTSNode
     {
         public List<MCTSNode> children = new List<MCTSNode>();
@@ -278,3 +526,4 @@ namespace CheckersNS
         }
     }
 }
+

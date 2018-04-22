@@ -22,8 +22,8 @@ GameObject:
   - component: {fileID: 33135288030974800}
   - component: {fileID: 65205313258252812}
   - component: {fileID: 23491796268457486}
-  m_Layer: 0
-  m_Name: Brown_Tile
+  m_Layer: 8
+  m_Name: Black_Tile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36,7 +36,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1804679992092190}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.5161374, y: -1.6352232, z: 0}
+  m_LocalPosition: {x: -3.5886097, y: -1.8007679, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -55,7 +55,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 2243b098daa1d7e4f8082b81b9dcc512, type: 2}
+  - {fileID: 2100000, guid: 75e34629a57565d4c857961fb749bb00, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

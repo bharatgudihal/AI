@@ -16,7 +16,6 @@ public class TicTacToe : MonoBehaviour {
     private CustomLogWriter logger;    
     private int circleWins = 0;
     private int crossWins = 0;
-    private float minSize = 3.0f;
 
     [SerializeField]
     private GameObject cross;

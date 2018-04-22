@@ -811,7 +811,7 @@ MonoBehaviour:
   player2Token: {fileID: 1273664367009030, guid: 829b41e9dafaa0745810443b069d1d71,
     type: 2}
   whiteTile: {fileID: 1611015887583626, guid: 7dbf9b8aea3d78c4aa7db9a96138b0b6, type: 2}
-  brownTile: {fileID: 1804679992092190, guid: 00b11562a9785e94082260273c1423b4, type: 2}
+  blackTile: {fileID: 1804679992092190, guid: 00b11562a9785e94082260273c1423b4, type: 2}
   currentIteration: 0
   numberOfIterations: 0
   doubleAI: 0
