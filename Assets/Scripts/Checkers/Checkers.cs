@@ -147,6 +147,8 @@ public class Checkers : MonoBehaviour {
                 Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
                 Token tokenToMove = GetSelectedToken(player2Tokens, tokenPosition);
 
+                Debug.Assert(tokenToMove.IsAlive);
+
                 if (node.isJump)
                 {
                     RemoveJumpedToken(movePosition, tokenToMove, player1Tokens, mainBoard);                    
@@ -158,6 +160,18 @@ public class Checkers : MonoBehaviour {
             }
         }
 	}
+
+    private void LateUpdate()
+    {
+        GameObject[] dummyObjects = GameObject.FindGameObjectsWithTag("Dummy");
+        if(dummyObjects != null)
+        {
+            for(int i = 0; i < dummyObjects.Length; i++)
+            {
+                Destroy(dummyObjects[i]);
+            }
+        }
+    }
 
     private void RemoveJumpedToken(Vector3 jumpPosition, Token jumpingToken, List<Token> opponentTokens, int[,] board)
     {
@@ -172,7 +186,10 @@ public class Checkers : MonoBehaviour {
         Token token = null;
         token = GetSelectedToken(opponentTokens, position);
         
-        Debug.Assert(token != null);
+        if(token == null)
+        {
+            int a = 0;
+        }
 
         token.IsAlive = false;
         board[midX, midY] = -1;
@@ -189,7 +206,7 @@ public class Checkers : MonoBehaviour {
 
         Vector3 position = new Vector3(midX, midY, -1.0f);
         Token token = null;
-        token = GetSelectedToken(opponentTokens, position);
+        token = GetDeadToken(opponentTokens, position);
 
         Debug.Assert(token != null);
 
@@ -206,7 +223,7 @@ public class Checkers : MonoBehaviour {
         int midX = (tokenX + x) / 2;
         int midY = (tokenY + y) / 2;
         bool result = false;
-        int opponent = (activePlayer + 1) % 2;
+        int opponent = (token.player + 1) % 2;
 
         if (IsOnBoard(x, y) && board[x,y] == -1 && board[midX, midY] == opponent)
         {            
@@ -222,7 +239,7 @@ public class Checkers : MonoBehaviour {
             }
             else
             {
-                if (activePlayer == 0)
+                if (token.player == 0)
                 {
                     if (tokenY < y)
                     {
@@ -257,7 +274,7 @@ public class Checkers : MonoBehaviour {
         int newX = (int)position.x;
         int newY = (int)position.y;
         board[oldX, oldY] = -1;
-        board[newX, newY] = activePlayer;
+        board[newX, newY] = token.player;
         token.gameObject.transform.position = new Vector3(position.x, position.y, -1);
         currentPlayState = PlayState.SELECTION;
     }
@@ -285,7 +302,7 @@ public class Checkers : MonoBehaviour {
             }
             else
             {
-                if(activePlayer == 0)
+                if(token.player == 0)
                 {
                     if(tokenY < y)
                     {
@@ -324,7 +341,22 @@ public class Checkers : MonoBehaviour {
         for(int i = 0; i < playerTokens.Count; i++)
         {
             Token token = playerTokens[i];            
-            if(token.gameObject.transform.position == position)
+            if(token.IsAlive && token.xPosition == position.x && token.yPosition == position.y)
+            {
+                result = token;
+                break;
+            }
+        }
+        return result;
+    }
+
+    private Token GetDeadToken(List<Token> playerTokens, Vector3 position)
+    {
+        Token result = null;
+        for (int i = 0; i < playerTokens.Count; i++)
+        {
+            Token token = playerTokens[i];
+            if (!token.IsAlive && token.xPosition == position.x && token.yPosition == position.y)
             {
                 result = token;
                 break;
@@ -384,13 +416,13 @@ public class Checkers : MonoBehaviour {
     private MinimaxNode RunMinimax(int player)
     {
         MinimaxNode root = null;
-        if (activePlayer == 0)
+        if (player == 0)
         {
-            root = new MinimaxNode(size, activePlayer, null, player1Tokens, player2Tokens);
+            root = new MinimaxNode(size, player, null, player1Tokens, player2Tokens);
         }
         else
         {
-            root = new MinimaxNode(size, activePlayer, null, player2Tokens, player1Tokens);
+            root = new MinimaxNode(size, player, null, player2Tokens, player1Tokens);
         }
         
         root.BoardState = mainBoard;
@@ -473,46 +505,11 @@ public class Checkers : MonoBehaviour {
         {
             //Check moves
             Token token = playerTokens[i];
-            int x = token.xPosition - 1;
-            int y = token.yPosition + (token.player == 0 ? 1 : -1);
-            Vector3 position = new Vector3(x, y);
-            if(IsValidMovePosition(position, token, board)){
-                AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
-            }
-
-            x = token.xPosition + 1;
-            position = new Vector3(x, y);
-            if (IsValidMovePosition(position, token, board))
+            if (token.IsAlive)
             {
-                AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
-            }
-
-            //Check jumps
-            x = token.xPosition - 2;
-            y = token.yPosition + (token.player == 0 ? 2 : -2);
-            position = new Vector3(x, y);
-            if(IsValidJumpPosition(position, token, board))
-            {
-                RemoveJumpedToken(position, token, opponentTokens, board);
-                AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, true);
-                RevertJumpedToken(position, token, opponentTokens, board);
-            }
-
-            x = token.xPosition + 2;
-            position = new Vector3(x, y);
-            if (IsValidJumpPosition(position, token, board))
-            {
-                RemoveJumpedToken(position, token, opponentTokens, board);
-                AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, true);
-                RevertJumpedToken(position, token, opponentTokens, board);
-            }
-
-            if (token.IsKing)
-            {
-                //Check king moves
-                x = token.xPosition - 1;
-                y = token.yPosition + (token.player == 0 ? -1 : 1);
-                position = new Vector3(x, y);
+                int x = token.xPosition - 1;
+                int y = token.yPosition + (token.player == 0 ? 1 : -1);
+                Vector3 position = new Vector3(x, y);
                 if (IsValidMovePosition(position, token, board))
                 {
                     AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
@@ -525,9 +522,9 @@ public class Checkers : MonoBehaviour {
                     AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
                 }
 
-                //Check king jumps
+                //Check jumps
                 x = token.xPosition - 2;
-                y = token.yPosition + (token.player == 0 ? -2 : 2);
+                y = token.yPosition + (token.player == 0 ? 2 : -2);
                 position = new Vector3(x, y);
                 if (IsValidJumpPosition(position, token, board))
                 {
@@ -543,6 +540,45 @@ public class Checkers : MonoBehaviour {
                     RemoveJumpedToken(position, token, opponentTokens, board);
                     AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, true);
                     RevertJumpedToken(position, token, opponentTokens, board);
+                }
+
+                if (token.IsKing)
+                {
+                    //Check king moves
+                    x = token.xPosition - 1;
+                    y = token.yPosition + (token.player == 0 ? -1 : 1);
+                    position = new Vector3(x, y);
+                    if (IsValidMovePosition(position, token, board))
+                    {
+                        AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
+                    }
+
+                    x = token.xPosition + 1;
+                    position = new Vector3(x, y);
+                    if (IsValidMovePosition(position, token, board))
+                    {
+                        AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
+                    }
+
+                    //Check king jumps
+                    x = token.xPosition - 2;
+                    y = token.yPosition + (token.player == 0 ? -2 : 2);
+                    position = new Vector3(x, y);
+                    if (IsValidJumpPosition(position, token, board))
+                    {
+                        RemoveJumpedToken(position, token, opponentTokens, board);
+                        AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, true);
+                        RevertJumpedToken(position, token, opponentTokens, board);
+                    }
+
+                    x = token.xPosition + 2;
+                    position = new Vector3(x, y);
+                    if (IsValidJumpPosition(position, token, board))
+                    {
+                        RemoveJumpedToken(position, token, opponentTokens, board);
+                        AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, true);
+                        RevertJumpedToken(position, token, opponentTokens, board);
+                    }
                 }
             }
         }        
@@ -622,8 +658,11 @@ namespace CheckersNS
         {
             gameObject = new GameObject();
             gameObject.name = "Dummy";
-            gameObject.transform.position = other.gameObject.transform.position;
+            gameObject.tag = "Dummy";
+            gameObject.transform.position = other.gameObject.transform.position;            
             player = other.player;
+            IsAlive = other.IsAlive;
+            IsKing = other.IsKing;
         }
 
         public bool IsAlive

@@ -816,7 +816,7 @@ MonoBehaviour:
   currentIteration: 0
   numberOfIterations: 0
   doubleAI: 0
-  maxMinimaxDepth: 2
+  maxMinimaxDepth: 4
 --- !u!1 &2012728608
 GameObject:
   m_ObjectHideFlags: 0
