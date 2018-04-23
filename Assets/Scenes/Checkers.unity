@@ -812,10 +812,11 @@ MonoBehaviour:
     type: 2}
   whiteTile: {fileID: 1611015887583626, guid: 7dbf9b8aea3d78c4aa7db9a96138b0b6, type: 2}
   blackTile: {fileID: 1804679992092190, guid: 00b11562a9785e94082260273c1423b4, type: 2}
+  gameText: {fileID: 1262364465}
   currentIteration: 0
   numberOfIterations: 0
   doubleAI: 0
-  gameText: {fileID: 1262364465}
+  maxMinimaxDepth: 2
 --- !u!1 &2012728608
 GameObject:
   m_ObjectHideFlags: 0
