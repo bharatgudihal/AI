@@ -329,8 +329,8 @@ public class TicTacToe : MonoBehaviour {
             {
                 float score = Simulate(current.BoardState, activePlayer);
 
-                //Back Propogate
-                current.BackPropogate(score);
+                //Back Propagate
+                current.BackPropagate(score);
             }
             else
             {
@@ -513,14 +513,14 @@ namespace TTT
             }
         }
 
-        public void BackPropogate(float value)
+        public void BackPropagate(float value)
         {
             totalPlayouts++;           
             score += value;
 
             if (parent != null)
             {
-                parent.BackPropogate(value);
+                parent.BackPropagate(value);
             }
         }
 
