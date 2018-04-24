@@ -819,6 +819,7 @@ MonoBehaviour:
   maxMinimaxDepth: 4
   maxMCTSTime: 2000
   maxNumberOfMoves: 100
+  moveCount: 0
 --- !u!1 &2012728608
 GameObject:
   m_ObjectHideFlags: 0

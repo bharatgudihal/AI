@@ -16,8 +16,7 @@ public class Checkers : MonoBehaviour {
     private int player1Wins = 0;
     private int player2Wins = 0;
     private int size = 8;
-    private int numberOfTokens = 12;
-    private int moveCount;
+    private int numberOfTokens = 12;    
 
     private enum PlayState
     {
@@ -50,6 +49,8 @@ public class Checkers : MonoBehaviour {
     private int maxMCTSTime;
     [SerializeField]
     private int maxNumberOfMoves;
+    [SerializeField]
+    private int moveCount;
 
     // Use this for initialization
     void Start () {
@@ -85,8 +86,8 @@ public class Checkers : MonoBehaviour {
 
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
-        //logger = gameObject.AddComponent<CustomLogWriter>();
-        //logger.filePath = "Checkers_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations;
+        logger = gameObject.AddComponent<CustomLogWriter>();
+        logger.filePath = "Checkers_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations;
 
         ResetBoard();
     }
@@ -125,7 +126,8 @@ public class Checkers : MonoBehaviour {
                             if (IsValidMovePosition(hitPosition, selectedToken, mainBoard))
                             {
                                 UpdateSelectedTokenPosition(hitPosition, selectedToken, mainBoard);
-                                stopGame = CheckForWin(mainBoard) != -1;
+                                stopGame = CheckForWin(mainBoard, true) != -1;
+                                gameText.text = "Player " + (activePlayer + 1) + " wins!";
                                 activePlayer = (activePlayer + 1) % 2;
                                 moveCount++;
                             }
@@ -133,7 +135,8 @@ public class Checkers : MonoBehaviour {
                             {
                                 RemoveJumpedToken(hitPosition, selectedToken, player2Tokens, mainBoard);
                                 UpdateSelectedTokenPosition(hitPosition, selectedToken, mainBoard);
-                                stopGame = CheckForWin(mainBoard) != -1;
+                                stopGame = CheckForWin(mainBoard, true) != -1;
+                                gameText.text = "Player " + (activePlayer + 1) + " wins!";
                                 activePlayer = (activePlayer + 1) % 2;
                                 moveCount++;
                             }
@@ -169,7 +172,8 @@ public class Checkers : MonoBehaviour {
 
                         UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
                     }
-                    stopGame = CheckForWin(mainBoard) != -1;
+                    stopGame = CheckForWin(mainBoard, true) != -1;
+                    gameText.text = "Player " + (activePlayer + 1) + " wins!";
                     activePlayer = (activePlayer + 1) % 2;
                     moveCount++;
                 }
@@ -190,16 +194,22 @@ public class Checkers : MonoBehaviour {
                 }
 
                 UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
-                stopGame = CheckForWin(mainBoard) != -1;
+                stopGame = CheckForWin(mainBoard, true) != -1;
+                gameText.text = "Player " + (activePlayer + 1) + " wins!";
                 activePlayer = (activePlayer + 1) % 2;
                 moveCount++;
-            }
+            }            
 
-            gameText.text = "Player " + (activePlayer + 1);
-
-            if(moveCount > maxNumberOfMoves)
+            if(moveCount == maxNumberOfMoves)
             {
                 stopGame = true;
+                int winner = CheckForWin(mainBoard, false);
+                gameText.text = "Player " + (winner + 1) + " wins!";
+            }
+
+            if (!stopGame)
+            {
+                gameText.text = "Player " + (activePlayer + 1);
             }
         }
 
@@ -209,7 +219,7 @@ public class Checkers : MonoBehaviour {
             for (int i = 0; i < dummyObjects.Length; i++)
             {
                 dummyObjects[i].SetActive(true);
-                Destroy(dummyObjects[i]);
+                DestroyImmediate(dummyObjects[i].gameObject);
             }
         }
     }
@@ -412,7 +422,7 @@ public class Checkers : MonoBehaviour {
         }
     }
 
-    private int CheckForWin(int[,] board)
+    private int CheckForWin(int[,] board, bool complete)
     {
         int winner = -1;
         int player1TokenCount = 0;
@@ -431,14 +441,28 @@ public class Checkers : MonoBehaviour {
             }
         }
 
-        if(player1TokenCount == 0)
+        if (complete)
         {
-            winner = 1;
-        }else if(player2TokenCount == 0)
-        {
-            winner = 0;
+            if (player1TokenCount == 0)
+            {
+                winner = 1;
+            }
+            else if (player2TokenCount == 0)
+            {
+                winner = 0;
+            }
         }
-
+        else
+        {
+            if (player1TokenCount > player2TokenCount)
+            {
+                winner = 0;
+            }
+            else if (player2TokenCount > player1TokenCount)
+            {
+                winner = 1;
+            }
+        }
         return winner;
     }
 
@@ -555,7 +579,7 @@ public class Checkers : MonoBehaviour {
             opponentTokens.AddRange(temp);
             temp.Clear();
 
-            winner = CheckForWin(boardState);
+            winner = CheckForWin(boardState, true);
             currentMoveCount++;
         }
 
@@ -579,15 +603,23 @@ public class Checkers : MonoBehaviour {
                 }
             }
         }
-        else if (winPlayer == winner)
+        else
         {
-            for (int i = 0; i < size; i++)
+            if(winner == -1)
             {
-                for (int j = 0; j < size; j++)
+                winner = CheckForWin(boardState, false);
+            }
+
+            if (winPlayer == winner)
+            {
+                for (int i = 0; i < size; i++)
                 {
-                    if (boardState[i, j] == winPlayer)
+                    for (int j = 0; j < size; j++)
                     {
-                        score++;
+                        if (boardState[i, j] == winPlayer)
+                        {
+                            score++;
+                        }
                     }
                 }
             }
@@ -1087,127 +1119,6 @@ namespace CheckersNS
             }
         }
         
-    }
-
-    public class MCTSNode
-    {
-        public List<MCTSNode> children = new List<MCTSNode>();
-        public MCTSNode parent;
-        public float score = 0;
-        public float totalPlayouts = 0;
-        public int player;
-        public int x;
-        public int y;
-
-        private int size;
-        private int[,] boardState;
-
-        public MCTSNode(int size)
-        {
-            this.size = size;
-        }
-
-        public int[,] BoardState
-        {
-            set
-            {
-                //copy board
-                boardState = new int[size, size];
-                for (int i = 0; i < size; i++)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        boardState[i, j] = value[i, j];
-                    }
-                }
-            }
-
-            get
-            {
-                int[,] duplicateBoardState = new int[size, size];
-                for (int i = 0; i < size; i++)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        duplicateBoardState[i, j] = boardState[i, j];
-                    }
-                }
-                return duplicateBoardState;
-            }
-        }
-
-        public float UCB1
-        {
-            get{
-                float N = 0.0f;
-                if (parent != null)
-                {
-                    N = parent.totalPlayouts;
-                }
-
-                if (totalPlayouts == 0.0f)
-                {
-                    return Mathf.Infinity;
-                }
-                else
-                {                    
-                    return (score / totalPlayouts) + 2.0f * Mathf.Sqrt(Mathf.Log(N) / totalPlayouts);
-                }
-            }
-        }
-
-        public void BackPropogate(float value)
-        {
-            totalPlayouts++;           
-            score += value;
-
-            if (parent != null)
-            {
-                parent.BackPropogate(value);
-            }
-        }
-
-        public void Expand()
-        {
-            if (children.Count == 0)
-            {
-                for (int i = 0; i < size; i++)
-                {
-                    for (int j = 0; j < size; j++)
-                    {
-                        if (boardState[i, j] == -1)
-                        {
-                            //Change state
-                            boardState[i, j] = player;
-                            MCTSNode child = new MCTSNode(size);
-                            child.parent = this;
-                            child.BoardState = boardState;
-                            child.x = i;
-                            child.y = j;
-                            child.player = (player + 1) % 2;
-                            children.Add(child);
-                            //Reset state
-                            boardState[i, j] = -1;
-                        }
-                    }
-                }
-            }
-        }
-
-        internal MCTSNode GetChildWithBestUCB1()
-        {
-            float maxUCB1 = children[0].UCB1;
-            int selectedIndex = 0;
-            for(int i = 1; i < children.Count; i++)
-            {
-                if(maxUCB1 < children[i].UCB1)
-                {
-                    maxUCB1 = children[i].UCB1;
-                    selectedIndex = i;
-                }
-            }
-            return children[selectedIndex];
-        }
     }
 
     public class CheckersNode
