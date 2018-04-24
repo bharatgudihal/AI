@@ -143,20 +143,32 @@ public class Checkers : MonoBehaviour {
 
                 if(doubleAI)
                 {
-                    //AI code
-                    CheckersNode node = RunMCTS(activePlayer);
-                    Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
-                    Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
-                    Token tokenToMove = GetSelectedToken(player2Tokens, tokenPosition);
-
-                    Debug.Assert(tokenToMove.IsAlive);
-
-                    if (node.isJump)
+                    if (moveCount == 0)
                     {
-                        RemoveJumpedToken(movePosition, tokenToMove, player1Tokens, mainBoard);
+                        //Reference:http://www.quadibloc.com/other/bo1211.htm
+                        //Make the best move possible (5,2) to (6,3)
+                        Vector3 tokenPosition = new Vector3(5, 2, -1.0f);
+                        Vector3 movePosition = new Vector3(6, 3);
+                        Token tokenToMove = GetSelectedToken(player1Tokens, tokenPosition);
+                        UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
                     }
+                    else
+                    {
+                        //AI code
+                        CheckersNode node = RunMCTS(activePlayer);
+                        Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
+                        Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
+                        Token tokenToMove = GetSelectedToken(player1Tokens, tokenPosition);
 
-                    UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
+                        Debug.Assert(tokenToMove.IsAlive);
+
+                        if (node.isJump)
+                        {
+                            RemoveJumpedToken(movePosition, tokenToMove, player2Tokens, mainBoard);
+                        }
+
+                        UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
+                    }
                     stopGame = CheckForWin(mainBoard) != -1;
                     activePlayer = (activePlayer + 1) % 2;
                     moveCount++;
@@ -165,8 +177,7 @@ public class Checkers : MonoBehaviour {
             else
             {
                 //AI code
-                //CheckersNode node = RunMinimax(activePlayer);
-                CheckersNode node = RunMCTS(activePlayer);
+                CheckersNode node = RunMinimax(activePlayer);                
                 Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
                 Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
                 Token tokenToMove = GetSelectedToken(player2Tokens, tokenPosition);
@@ -191,16 +202,14 @@ public class Checkers : MonoBehaviour {
                 stopGame = true;
             }
         }
-	}
 
-    private void LateUpdate()
-    {
         GameObject[] dummyObjects = GameObject.FindGameObjectsWithTag("Dummy");
-        if(dummyObjects != null)
+        if (dummyObjects != null)
         {
-            for(int i = 0; i < dummyObjects.Length; i++)
+            for (int i = 0; i < dummyObjects.Length; i++)
             {
-                //DestroyImmediate(dummyObjects[i], true);
+                dummyObjects[i].SetActive(true);
+                Destroy(dummyObjects[i]);
             }
         }
     }
@@ -1011,7 +1020,7 @@ namespace CheckersNS
         
         public Token(Token other)
         {
-            gameObject = new GameObject();
+            gameObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
             gameObject.name = "Dummy";
             gameObject.tag = "Dummy";
             gameObject.transform.position = other.gameObject.transform.position;            

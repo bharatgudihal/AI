@@ -815,10 +815,10 @@ MonoBehaviour:
   gameText: {fileID: 1262364465}
   currentIteration: 0
   numberOfIterations: 0
-  doubleAI: 0
+  doubleAI: 1
   maxMinimaxDepth: 4
   maxMCTSTime: 2000
-  maxNumberOfMoves: 300
+  maxNumberOfMoves: 100
 --- !u!1 &2012728608
 GameObject:
   m_ObjectHideFlags: 0
