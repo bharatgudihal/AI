@@ -154,6 +154,7 @@ public class Checkers : MonoBehaviour {
 
                 if(doubleAI)
                 {
+                    bool instaLose = false;
                     if (moveCount == 0)
                     {
                         //Reference:http://www.quadibloc.com/other/bo1211.htm
@@ -167,53 +168,80 @@ public class Checkers : MonoBehaviour {
                     {
                         //AI code
                         CheckersNode node = RunMCTS(activePlayer);
-                        Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
-                        Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
-                        Token tokenToMove = GetSelectedToken(player1Tokens, tokenPosition);
-
-                        Debug.Assert(tokenToMove.IsAlive);
-
-                        if (node.isJump)
+                        if (node != null)
                         {
-                            RemoveJumpedToken(movePosition, tokenToMove, player2Tokens, mainBoard);
-                        }
+                            Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
+                            Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
+                            Token tokenToMove = GetSelectedToken(player1Tokens, tokenPosition);
 
-                        UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
+                            Debug.Assert(tokenToMove.IsAlive);
+
+                            if (node.isJump)
+                            {
+                                RemoveJumpedToken(movePosition, tokenToMove, player2Tokens, mainBoard);
+                            }
+
+                            UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
+                        }
+                        else
+                        {
+                            instaLose = true;
+                        }
                     }
-                    stopGame = CheckForWin(mainBoard, true) != -1;                    
-                    if (stopGame)
+                    if (!instaLose)
                     {
-                        gameText.text = "Player " + (activePlayer + 1) + " wins!";
-                        player1Wins++;
+                        stopGame = CheckForWin(mainBoard, true) != -1;
+                        if (stopGame)
+                        {
+                            gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                            player1Wins++;
+                        }
+                        activePlayer = (activePlayer + 1) % 2;
+                        moveCount++;
                     }
-                    activePlayer = (activePlayer + 1) % 2;
-                    moveCount++;
+                    else
+                    {
+                        //Player 2 wins
+                        stopGame = true;
+                        gameText.text = "Player " + (((activePlayer + 1) % 2) + 1) + " wins!";
+                        player2Wins++;
+                    }
                 }
             }
             else
             {
                 //AI code
-                CheckersNode node = RunMinimax(activePlayer);                
-                Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
-                Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
-                Token tokenToMove = GetSelectedToken(player2Tokens, tokenPosition);
-
-                Debug.Assert(tokenToMove.IsAlive);
-
-                if (node.isJump)
+                CheckersNode node = RunMinimax(activePlayer);
+                if (node != null)
                 {
-                    RemoveJumpedToken(movePosition, tokenToMove, player1Tokens, mainBoard);                    
-                }
+                    Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
+                    Vector3 movePosition = new Vector3(node.xEnd, node.yEnd);
+                    Token tokenToMove = GetSelectedToken(player2Tokens, tokenPosition);
 
-                UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
-                stopGame = CheckForWin(mainBoard, true) != -1;
-                if (stopGame)
-                {
-                    gameText.text = "Player " + (activePlayer + 1) + " wins!";
-                    player2Wins++;
+                    Debug.Assert(tokenToMove.IsAlive);
+
+                    if (node.isJump)
+                    {
+                        RemoveJumpedToken(movePosition, tokenToMove, player1Tokens, mainBoard);
+                    }
+
+                    UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
+                    stopGame = CheckForWin(mainBoard, true) != -1;
+                    if (stopGame)
+                    {
+                        gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                        player2Wins++;
+                    }
+                    activePlayer = (activePlayer + 1) % 2;
+                    moveCount++;
                 }
-                activePlayer = (activePlayer + 1) % 2;
-                moveCount++;
+                else
+                {
+                    //Player 1 wins
+                    stopGame = true;
+                    gameText.text = "Player " + (((activePlayer + 1) % 2) + 1) + " wins!";
+                    player1Wins++;
+                }
             }            
 
             if(moveCount == maxNumberOfMoves)
@@ -237,10 +265,10 @@ public class Checkers : MonoBehaviour {
             }
             DummyObjectPool.Instance.ResetAll();
         }else
-        {            
+        {
+            currentIteration++;
             if (currentIteration < numberOfIterations)
-            {
-                currentIteration++;
+            {                
                 ResetBoard();
             }
             else
@@ -249,6 +277,7 @@ public class Checkers : MonoBehaviour {
                 {
                     gameText.text = "Finished";
                     WriteLog();
+                    Application.Quit();
                 }
             }
         }        
@@ -526,20 +555,27 @@ public class Checkers : MonoBehaviour {
             }
         }
 
-        //Find node with best score
-        float bestScore = root.children[0].GetScore() / root.children[0].totalPlayouts;
-        int selectedIndex = 0;
-        for (int i = 1; i < root.children.Count; i++)
+        if (root.children.Count > 0)
         {
-            float score = root.children[i].GetScore() / root.children[i].totalPlayouts;
-            if (bestScore < score)
+            //Find node with best score
+            float bestScore = root.children[0].GetScore() / root.children[0].totalPlayouts;
+            int selectedIndex = 0;
+            for (int i = 1; i < root.children.Count; i++)
             {
-                bestScore = score;
-                selectedIndex = i;
+                float score = root.children[i].GetScore() / root.children[i].totalPlayouts;
+                if (bestScore < score)
+                {
+                    bestScore = score;
+                    selectedIndex = i;
+                }
             }
-        }
 
-        return root.children[selectedIndex];
+            return root.children[selectedIndex];
+        }
+        else
+        {
+            return null;
+        }
     }
 
     private int Simulate(CheckersNode node, int winPlayer)
@@ -1257,19 +1293,26 @@ namespace CheckersNS
 
         internal CheckersNode GetMaxChildNode()
         {
-            int maxScore = children[0].GetScore();
-            int selectedIndex = 0;
-
-            for (int i = 1; i < children.Count; i++)
+            if (children.Count > 0)
             {
-                if(maxScore < children[i].GetScore())
-                {
-                    maxScore = children[i].GetScore();
-                    selectedIndex = i;
-                }
-            }
+                int maxScore = children[0].GetScore();
+                int selectedIndex = 0;
 
-            return children[selectedIndex];
+                for (int i = 1; i < children.Count; i++)
+                {
+                    if (maxScore < children[i].GetScore())
+                    {
+                        maxScore = children[i].GetScore();
+                        selectedIndex = i;
+                    }
+                }
+
+                return children[selectedIndex];
+            }
+            else
+            {
+                return null;
+            }
         }
 
         internal CheckersNode GetMinChildNode()

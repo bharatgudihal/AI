@@ -858,8 +858,8 @@ MonoBehaviour:
   currentIteration: 0
   numberOfIterations: 10
   doubleAI: 1
-  maxMinimaxDepth: 2
-  maxMCTSTime: 500
+  maxMinimaxDepth: 4
+  maxMCTSTime: 2000
   maxNumberOfMoves: 100
   moveCount: 0
 --- !u!1 &2012728608

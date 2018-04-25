@@ -1,0 +1,8 @@
+Player 1 start first and uses MCTS
+Player 2 uses Minimax
+AI Parameters:
+Minimax Depth: 4
+MCTS Time: 2000 milliseconds
+Total games: 20
+Player 1 wins: 2
+Player 2 wins: 18
