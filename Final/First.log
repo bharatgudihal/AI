@@ -3,6 +3,8 @@ Player 2 uses Minimax
 AI Parameters:
 Minimax Depth: 2
 MCTS Time: 500 milliseconds
-Total games: 20
-Player 1 wins: 6
-Player 2 wins: 14
+Total games: 100
+Player 1 wins: 17
+Player 2 wins: 83
+Average minimax time: 20.7237909663866
+Average mcts depth: 6.43469

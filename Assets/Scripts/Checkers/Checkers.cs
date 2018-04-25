@@ -16,7 +16,11 @@ public class Checkers : MonoBehaviour {
     private int player1Wins = 0;
     private int player2Wins = 0;
     private int size = 8;
-    private int numberOfTokens = 12;    
+    private int numberOfTokens = 12;
+    private int minimaxTurns;
+    private double totalMinimaxTime;
+    private int mctsTurns;
+    private int totalMCTSDepth;
 
     private enum PlayState
     {
@@ -86,6 +90,10 @@ public class Checkers : MonoBehaviour {
 
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
+        totalMinimaxTime = 0;
+        minimaxTurns = 0;
+        totalMCTSDepth = 0;
+        mctsTurns = 0;
         if (numberOfIterations > 0)
         {
             logger = gameObject.AddComponent<CustomLogWriter>();
@@ -168,6 +176,7 @@ public class Checkers : MonoBehaviour {
                     {
                         //AI code
                         CheckersNode node = RunMCTS(activePlayer);
+                        mctsTurns++;
                         if (node != null)
                         {
                             Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
@@ -211,7 +220,10 @@ public class Checkers : MonoBehaviour {
             else
             {
                 //AI code
+                DateTime start = DateTime.Now;
                 CheckersNode node = RunMinimax(activePlayer);
+                totalMinimaxTime += (DateTime.Now - start).TotalMilliseconds;
+                minimaxTurns++;
                 if (node != null)
                 {
                     Vector3 tokenPosition = new Vector3(node.xStart, node.yStart, -1.0f);
@@ -529,15 +541,23 @@ public class Checkers : MonoBehaviour {
 
         root.BoardState = mainBoard;
         DateTime start = DateTime.Now;
+        int maxDepth = 0;
 
         while((DateTime.Now - start).TotalMilliseconds < maxMCTSTime)
         {
             CheckersNode current = root;
+            int depth = 0;
 
             //Selection
             while (current.children.Count != 0)
             {
                 current = current.GetChildWithBestUCB1();
+                depth++;
+            }
+
+            if(maxDepth < depth)
+            {
+                maxDepth = depth;
             }
 
             //Simulation
@@ -554,6 +574,8 @@ public class Checkers : MonoBehaviour {
                 GenerateChildNodes(current);
             }
         }
+
+        totalMCTSDepth += maxDepth;
 
         if (root.children.Count > 0)
         {
@@ -1087,7 +1109,9 @@ public class Checkers : MonoBehaviour {
     {
         logger.Write("Total games: " + currentIteration);
         logger.Write("Player 1 wins: " + player1Wins);
-        logger.Write("Player 2 wins: " + player2Wins);        
+        logger.Write("Player 2 wins: " + player2Wins);
+        logger.Write("Average minimax time: " + (totalMinimaxTime / (float)minimaxTurns));
+        logger.Write("Average mcts depth: " + (totalMCTSDepth / (float)mctsTurns));
     }
 }
 
