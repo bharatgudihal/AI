@@ -86,8 +86,16 @@ public class Checkers : MonoBehaviour {
 
         float cameraZ = Camera.main.transform.position.z;
         Camera.main.transform.position = new Vector3(size / 2, size / 2, cameraZ);
-        logger = gameObject.AddComponent<CustomLogWriter>();
-        logger.filePath = "Checkers_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations;
+        if (numberOfIterations > 0)
+        {
+            logger = gameObject.AddComponent<CustomLogWriter>();
+            logger.filePath = "Checkers_" + (doubleAI ? "AI_v_AI_" : "") + (size + "x" + size + "_") + numberOfIterations + "_iterations";
+            logger.Write("Player 1 start first and uses MCTS");
+            logger.Write("Player 2 uses Minimax");
+            logger.Write("AI Parameters:");
+            logger.Write("Minimax Depth: "+maxMinimaxDepth);
+            logger.Write("MCTS Time: " + maxMCTSTime + " milliseconds");
+        }
 
         ResetBoard();
     }
@@ -172,8 +180,12 @@ public class Checkers : MonoBehaviour {
 
                         UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
                     }
-                    stopGame = CheckForWin(mainBoard, true) != -1;
-                    gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                    stopGame = CheckForWin(mainBoard, true) != -1;                    
+                    if (stopGame)
+                    {
+                        gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                        player1Wins++;
+                    }
                     activePlayer = (activePlayer + 1) % 2;
                     moveCount++;
                 }
@@ -195,7 +207,11 @@ public class Checkers : MonoBehaviour {
 
                 UpdateSelectedTokenPosition(movePosition, tokenToMove, mainBoard);
                 stopGame = CheckForWin(mainBoard, true) != -1;
-                gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                if (stopGame)
+                {
+                    gameText.text = "Player " + (activePlayer + 1) + " wins!";
+                    player2Wins++;
+                }
                 activePlayer = (activePlayer + 1) % 2;
                 moveCount++;
             }            
@@ -205,23 +221,37 @@ public class Checkers : MonoBehaviour {
                 stopGame = true;
                 int winner = CheckForWin(mainBoard, false);
                 gameText.text = "Player " + (winner + 1) + " wins!";
+                if(winner == 0)
+                {
+                    player1Wins++;
+                }
+                else
+                {
+                    player2Wins++;
+                }
             }
 
             if (!stopGame)
             {
                 gameText.text = "Player " + (activePlayer + 1);
             }
-        }
-
-        GameObject[] dummyObjects = GameObject.FindGameObjectsWithTag("Dummy");
-        if (dummyObjects != null)
-        {
-            for (int i = 0; i < dummyObjects.Length; i++)
+            DummyObjectPool.Instance.ResetAll();
+        }else
+        {            
+            if (currentIteration < numberOfIterations)
             {
-                dummyObjects[i].SetActive(true);
-                DestroyImmediate(dummyObjects[i].gameObject);
+                currentIteration++;
+                ResetBoard();
             }
-        }
+            else
+            {
+                if (gameText.text != "Finished")
+                {
+                    gameText.text = "Finished";
+                    WriteLog();
+                }
+            }
+        }        
     }
 
     private void RemoveJumpedToken(Vector3 jumpPosition, Token jumpingToken, List<Token> opponentTokens, int[,] board)
@@ -409,17 +439,6 @@ public class Checkers : MonoBehaviour {
             }
         }
         return result;
-    }
-
-    private void CheckToRestart()
-    {
-        if (doubleAI && currentIteration < numberOfIterations)
-        {
-            ResetBoard();
-        }else if(currentIteration >= numberOfIterations)
-        {
-            WriteLog();
-        }
     }
 
     private int CheckForWin(int[,] board, bool complete)
@@ -641,15 +660,16 @@ public class Checkers : MonoBehaviour {
         destination = new Vector3();
         isJump = false;
         List<Move> moves = new List<Move>();
-        
+
+        bool hasJumped = false;
+
         //Find all possible moves
-        for(int i = 0; i < playerTokens.Count; i++)
+        for (int i = 0; i < playerTokens.Count; i++)
         {
             //Check moves
             Token token = playerTokens[i];
             if (token.IsAlive)
-            {
-                bool hasJumped = false;
+            {                
                 //Check jumps
                 int x = token.xPosition - 2;
                 int y = token.yPosition + (token.player == 0 ? 2 : -2);
@@ -702,8 +722,6 @@ public class Checkers : MonoBehaviour {
                         moves.Add(move);
                     }
                 }
-
-                hasJumped = false;
 
                 if (token.IsKing)
                 {
@@ -869,21 +887,25 @@ public class Checkers : MonoBehaviour {
         List<Token> playerTokens = new List<Token>();
         for (int i = 0; i < node.playerTokens.Count; i++)
         {
-            playerTokens.Add(node.playerTokens[i]);
+            Token token = new Token(node.playerTokens[i]);
+            playerTokens.Add(token);
         }
 
         List<Token> opponentTokens = new List<Token>();
         for (int i = 0; i < node.opponentTokens.Count; i++)
         {
-            opponentTokens.Add(node.opponentTokens[i]);
+            Token token = new Token(node.opponentTokens[i]);
+            opponentTokens.Add(token);
         }
-        //Find all possible moveable token positions        
-        for(int i = 0; i < playerTokens.Count; i++)
+
+        bool hasJumped = false;
+
+        //Find all possible moveable token positions
+        for (int i = 0; i < playerTokens.Count; i++)
         {            
             Token token = playerTokens[i];
             if (token.IsAlive)
-            {
-                bool hasJumped = false;
+            {                
 
                 //Check jumps
                 int x = token.xPosition - 2;
@@ -926,8 +948,6 @@ public class Checkers : MonoBehaviour {
                         AddMoveChildNode(token, board, x, y, position, node, opponentTokens, playerTokens, false);
                     }
                 }
-
-                hasJumped = false;
 
                 if (token.IsKing)
                 {
@@ -1031,8 +1051,7 @@ public class Checkers : MonoBehaviour {
     {
         logger.Write("Total games: " + currentIteration);
         logger.Write("Player 1 wins: " + player1Wins);
-        logger.Write("Player 2 wins: " + player2Wins);
-        logger.Write("Total draws: " + (currentIteration - (player1Wins + player2Wins)));
+        logger.Write("Player 2 wins: " + player2Wins);        
     }
 }
 
@@ -1052,9 +1071,8 @@ namespace CheckersNS
         
         public Token(Token other)
         {
-            gameObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            gameObject.name = "Dummy";
-            gameObject.tag = "Dummy";
+            gameObject = DummyObjectPool.Instance.GetPoolObject();
+            //gameObject = new GameObject();
             gameObject.transform.position = other.gameObject.transform.position;            
             player = other.player;
             IsAlive = other.IsAlive;
