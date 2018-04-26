@@ -856,7 +856,7 @@ MonoBehaviour:
   blackTile: {fileID: 1804679992092190, guid: 00b11562a9785e94082260273c1423b4, type: 2}
   gameText: {fileID: 1262364465}
   currentIteration: 0
-  numberOfIterations: 10
+  numberOfIterations: 20
   doubleAI: 1
   maxMinimaxDepth: 4
   maxMCTSTime: 2000
